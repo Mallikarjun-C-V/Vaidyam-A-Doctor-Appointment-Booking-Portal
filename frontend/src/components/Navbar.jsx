@@ -10,7 +10,8 @@ const Navbar = () => {
     const [token, setToken] = useState(true);
 
     return (
-        <div className='flex items-center justify-between text-sm py-5 mb-5 border-b border-b-gray-200 bg-white/80 backdrop-blur-md sticky top-2 z-50 px-4 md:px-8 shadow-[0_8px_32px_-8px_rgba(95,111,255,0.15),0_0_0_1px_rgba(95,111,255,0.08),0_4px_16px_-4px_rgba(0,0,0,0.06)] rounded-[50px]'> <img onClick={() => navigate('/')} className='w-44 cursor-pointer hover:scale-105 transition-transform duration-300' src={assets.logo} alt="" />
+        <div className='flex items-center justify-between text-sm py-5 mb-5 border-b border-b-gray-200 bg-white/80 backdrop-blur-md sticky top-2 z-50 px-4 md:px-8 shadow-[0_8px_32px_-8px_rgba(95,111,255,0.15),0_0_0_1px_rgba(95,111,255,0.08),0_4px_16px_-4px_rgba(0,0,0,0.06)] rounded-[50px]'> 
+        <img onClick={() => {navigate('/'); scrollTo(0,0)}} className='w-44 cursor-pointer hover:scale-105 transition-transform duration-300' src={assets.logo} alt="" />
             <ul className='hidden md:flex items-center gap-8 font-medium'>
                 <NavLink to="/" onClick={() => window.scrollTo(0,0)} className="group">
                     {({ isActive }) => (
