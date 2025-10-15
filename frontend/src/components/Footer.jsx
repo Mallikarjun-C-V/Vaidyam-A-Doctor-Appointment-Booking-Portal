@@ -1,9 +1,10 @@
 import React from 'react';
 import { assets } from '../assets/assets';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const Footer = () => {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   const handleNavigate = (path) => {
     navigate(path);
@@ -11,49 +12,118 @@ const Footer = () => {
   };
 
   return (
-    <div className="bg-gray-50 rounded-[50px] border-t border-gray-200 pt-16 px-6 md:px-12 lg:px-20 mb-10">
+    <motion.div
+      className="bg-gray-50 rounded-[50px] border-t border-gray-200 pt-16 px-6 md:px-12 lg:px-20 mb-10"
+      initial={{ opacity: 0, y: 50, scale: 0.95 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.8, ease: 'easeOut' }}
+      viewport={{ once: true }}
+    >
       <div className="flex flex-col sm:grid grid-cols-[3fr_1fr_1fr] gap-14 mb-14 text-sm">
 
         {/* left */}
         <div>
-          <img
+          <motion.img
             onClick={() => handleNavigate('/')}
             className="mb-6 w-44 cursor-pointer hover:opacity-90 transition-opacity duration-300"
             src={assets.logo}
             alt="Vaidyam Logo"
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
+            viewport={{ once: true }}
           />
-          <p className="w-full md:w-2/3 text-gray-600 leading-relaxed text-[15px]">
+          <motion.p
+            className="w-full md:w-2/3 text-gray-600 leading-relaxed text-[15px]"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4, ease: 'easeOut' }}
+            viewport={{ once: true }}
+          >
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestiae libero ea quo nihil exercitationem, animi nesciunt culpa cumque quasi eaque ratione, autem facilis cum sequi quis, iste magnam provident minus. Quis distinctio assumenda laborum dolore.
-          </p>
+          </motion.p>
         </div>
 
         {/* center */}
         <div>
-          <p className="text-lg font-semibold mb-5 text-gray-800 tracking-wide">Company</p>
+          <motion.p
+            className="text-lg font-semibold mb-5 text-gray-800 tracking-wide"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6, ease: 'easeOut' }}
+            viewport={{ once: true }}
+          >
+            Company
+          </motion.p>
           <ul className="flex flex-col gap-2.5 text-gray-600">
-            <li className="cursor-pointer hover:text-primary transition-colors duration-300" onClick={() => handleNavigate('/')}>Home</li>
-            <li className="cursor-pointer hover:text-primary transition-colors duration-300" onClick={() => handleNavigate('/about')}>About us</li>
-            <li className="cursor-pointer hover:text-primary transition-colors duration-300" onClick={() => handleNavigate('/contact')}>Contact us</li>
-            <li className="cursor-pointer hover:text-primary transition-colors duration-300" onClick={() => handleNavigate('/privacy')}>Privacy policy</li>
+            {['Home', 'About us', 'Contact us', 'Privacy policy'].map((item, i) => (
+              <motion.li
+                key={i}
+                className="cursor-pointer hover:text-primary transition-colors duration-300"
+                onClick={() => handleNavigate(item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s/g, '')}`)}
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.7 + i * 0.1, ease: 'easeOut' }}
+                viewport={{ once: true }}
+              >
+                {item}
+              </motion.li>
+            ))}
           </ul>
         </div>
 
         {/* right */}
         <div>
-          <p className="text-lg font-semibold mb-5 text-gray-800 tracking-wide">Get in Touch</p>
+          <motion.p
+            className="text-lg font-semibold mb-5 text-gray-800 tracking-wide"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1, ease: 'easeOut' }}
+            viewport={{ once: true }}
+          >
+            Get in Touch
+          </motion.p>
           <ul className="flex flex-col gap-2.5 text-gray-600">
-            <li className="hover:text-primary transition-colors duration-300">📞 +91-9876598765</li>
-            <li className="hover:text-primary transition-colors duration-300">✉️ vaidyam@gmail.com</li>
+            <motion.li
+              className="hover:text-primary transition-colors duration-300"
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 1.1, ease: 'easeOut' }}
+              viewport={{ once: true }}
+            >
+              📞 +91-9876598765
+            </motion.li>
+            <motion.li
+              className="hover:text-primary transition-colors duration-300"
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 1.2, ease: 'easeOut' }}
+              viewport={{ once: true }}
+            >
+              ✉️ vaidyam@gmail.com
+            </motion.li>
           </ul>
         </div>
       </div>
 
       {/* copyright */}
-      <hr className="border-gray-300" />
-      <p className="py-6 text-sm text-gray-500 text-center tracking-wide">
+      <motion.hr
+        className="border-gray-300"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 0.8, delay: 1.3, ease: 'easeOut' }}
+        viewport={{ once: true }}
+      />
+      <motion.p
+        className="py-6 text-sm text-gray-500 text-center tracking-wide"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 1.4, ease: 'easeOut' }}
+        viewport={{ once: true }}
+      >
         © 2025 <span className="font-semibold text-primary">Vaidyam</span> — All Rights Reserved
-      </p>
-    </div>
+      </motion.p>
+    </motion.div>
   );
 };
 
