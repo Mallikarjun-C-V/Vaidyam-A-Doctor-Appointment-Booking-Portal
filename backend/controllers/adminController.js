@@ -24,7 +24,7 @@ const addDoctor = async (req,res) => {
 
         // validating strong password
         if (password.length < 8) {
-            return res.json({success:false,message:"Please enter stron password"})
+            return res.json({success:false,message:"Please enter strong password"})
         }
 
         //hashing doctor password
@@ -83,4 +83,17 @@ const loginAdmin = async (req,res) => {
 
 }
 
-export {addDoctor,loginAdmin}
+//API to get all doctors list
+const allDoctor = async (req,res) => {
+    try {
+
+        const doctors = await doctorModel.find({}).select('-password')
+        res.json({success:true,doctors})
+        
+    } catch (error) {
+        console.log(error);
+        res.json({success:false,message:error.message})        
+    }
+}
+
+export {addDoctor,loginAdmin,allDoctor}
