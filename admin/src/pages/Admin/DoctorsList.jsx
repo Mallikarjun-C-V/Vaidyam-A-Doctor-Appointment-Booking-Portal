@@ -3,7 +3,7 @@ import { AdminContext } from '../../context/AdminContext'
 
 const DoctorsList = () => {
 
-  const { doctors, aToken, getAllDoctors } = useContext(AdminContext)
+  const { doctors, aToken, getAllDoctors, changeAvailability } = useContext(AdminContext)
 
   useEffect(() => {
     if (aToken) {
@@ -77,6 +77,7 @@ const DoctorsList = () => {
                     </span>
                     <label className="relative inline-flex items-center cursor-pointer group/toggle">
                       <input 
+                        onChange={()=>changeAvailability(item._id)}
                         type="checkbox" 
                         checked={item.available}
                         readOnly
