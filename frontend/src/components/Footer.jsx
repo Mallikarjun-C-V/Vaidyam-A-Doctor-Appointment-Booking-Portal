@@ -121,7 +121,8 @@ const Footer = () => {
         transition={{ duration: 0.8, delay: 1.4, ease: 'easeOut' }}
         viewport={{ once: true }}
       >
-        © 2025 <span className="font-semibold text-primary">Vaidyam</span> — All Rights Reserved
+        © 2025 <span onClick={() => { navigate('/'); scrollTo(0, 0) }}
+ className=" cursor-pointer font-semibold text-primary">Vaidyam</span> — All Rights Reserved
       </motion.p>
     </motion.div>
   );
