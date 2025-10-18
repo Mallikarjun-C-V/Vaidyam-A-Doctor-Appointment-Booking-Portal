@@ -1,12 +1,20 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import { assets } from '../assets/assets'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { AppContext } from '../context/AppContext'
 
 const Navbar = () => {
     const navigate = useNavigate();
+
+    const {token, setToken} = useContext(AppContext)
+
     const [showMenu, setShowMenu] = useState(false);
-    const [token, setToken] = useState(true);
+
+    const logout = () => {
+        setToken(false)
+        localStorage.removeItem('token')
+    }
 
     return (
         <motion.div
@@ -71,7 +79,7 @@ const Navbar = () => {
                                 <p onClick={() => navigate('my-appointments')} className='hover:bg-gray-50 hover:text-primary px-4 py-3 rounded-md cursor-pointer transition-all duration-200 flex items-center gap-3'>
                                     <span className='text-lg'>📅</span> My Appointments
                                 </p>
-                                <p onClick={() => setToken(false)} className='hover:bg-red-50 hover:text-red-600 px-4 py-3 rounded-md cursor-pointer transition-all duration-200 flex items-center gap-3'>
+                                <p onClick={() => logout()} className='hover:bg-red-50 hover:text-red-600 px-4 py-3 rounded-md cursor-pointer transition-all duration-200 flex items-center gap-3'>
                                     <span className='text-lg'>🚪</span> Logout
                                 </p>
                             </div>
@@ -156,7 +164,7 @@ const Navbar = () => {
                                         <span className='text-lg'>📅</span> My Appointments
                                     </button>
                                     <button
-                                        onClick={() => { setToken(false); setShowMenu(false); }}
+                                        onClick={() => { logout(); setShowMenu(false); }}
                                         className='w-full text-left px-4 py-3 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors duration-200 flex items-center gap-3'
                                     >
                                         <span className='text-lg'>🚪</span> Logout

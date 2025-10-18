@@ -1,19 +1,59 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import { AppContext } from '../context/AppContext';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
+
+  const { backendUrl, token, setToken } = useContext(AppContext)
+  const navigate = useNavigate();
+
   const [state, setState] = useState('Sign Up');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const onSubmitHandler = (e) => {
-    e.preventDefault();
-    console.log({ name, email, password, state });
-    // Add your API logic here
-  };
+  const onSubmitHandler = async (event) => {
+    event.preventDefault();
+
+    try {
+
+      if (state === 'Sign Up') {
+
+        const { data } = await axios.post(backendUrl + '/api/user/register', { name, password, email })
+
+        if (data.success) {
+          localStorage.setItem('token', data.token)
+          setToken(data.token)
+        } else {
+          toast.error(data.message)
+        }
+
+      } else {
+        const { data } = await axios.post(backendUrl + '/api/user/login', { password, email })
+
+        if (data.success) {
+          localStorage.setItem('token', data.token)
+          setToken(data.token)
+        } else {
+          toast.error(data.message)
+        }
+      }
+
+    } catch (error) {
+      toast.error(error.message)
+    }
+  }
+
+  useEffect(()=>{
+    if (token) {
+      navigate('/')
+    }
+  },[token])
 
   return (
     <form
@@ -65,54 +105,53 @@ const Login = () => {
           </p>
         </motion.div>
 
-        {/* Social Login */}
-        <div className="flex gap-4 mb-4">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            type="button"
-            className="flex-1 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition flex items-center justify-center gap-2 hover:shadow-md"
-          >
-            <img src="https://www.google.com/favicon.ico" className="w-5 h-5" alt="Google" />
-            <span className="text-sm font-medium">Google</span>
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            type="button"
-            className="flex-1 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition flex items-center justify-center gap-2 hover:shadow-md"
-          >
-            <img src="https://github.com/favicon.ico" className="w-5 h-5" alt="GitHub" />
-            <span className="text-sm font-medium">GitHub</span>
-          </motion.button>
-        </div>
-
-        {/* Divider */}
-        <div className="flex items-center gap-4 mb-4">
-          <div className="flex-1 h-px bg-gray-300"></div>
-          <span className="text-sm text-gray-500">or continue with</span>
-          <div className="flex-1 h-px bg-gray-300"></div>
-        </div>
-
         {/* Form Fields */}
         {state === 'Sign Up' && (
-          <motion.div whileHover={{ scale: 1.02 }} className="w-full">
-            <label className="block text-sm font-medium text-gray-600 mb-1">Full Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="border border-gray-300 rounded-lg w-full p-2.5 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition bg-white/50 backdrop-blur-sm"
-            />
+          <motion.div whileHover={{ scale: 1.02 }} className="w-full relative">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Full Name
+            </label>
+
+            <div className="relative">
+              {/* User Icon */}
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 text-black"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+                  />
+                </svg>
+              </div>
+
+              {/* Input */}
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                placeholder="Enter your name"
+                className="w-full pl-12 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition bg-white text-gray-900 placeholder-gray-400"
+              />
+            </div>
           </motion.div>
         )}
 
+
         <motion.div whileHover={{ scale: 1.02 }} className="w-full relative">
-          <label className="block text-sm font-medium text-gray-600 mb-1">Email</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Email
+          </label>
+
           <div className="relative">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+            {/* Icon */}
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
+                className="h-5 w-5 text-black"  // solid black
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -124,24 +163,32 @@ const Login = () => {
                   d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
                 />
               </svg>
-            </span>
+            </div>
+
+            {/* Input */}
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="pl-10 border border-gray-300 rounded-lg w-full p-2.5 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition bg-white/50 backdrop-blur-sm"
+              placeholder="Enter your email"
+              className="w-full pl-12 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition bg-white text-gray-900 placeholder-gray-400"
             />
           </div>
         </motion.div>
 
+
         <motion.div whileHover={{ scale: 1.02 }} className="w-full relative">
-          <label className="block text-sm font-medium text-gray-600 mb-1">Password</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Password
+          </label>
+
           <div className="relative">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+            {/* Lock Icon */}
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
+                className="h-5 w-5 text-black" // solid black
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -153,18 +200,23 @@ const Login = () => {
                   d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                 />
               </svg>
-            </span>
+            </div>
+
+            {/* Password Input */}
             <input
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="pl-10 border border-gray-300 rounded-lg w-full p-2.5 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition bg-white/50 backdrop-blur-sm pr-10"
+              placeholder="Enter your password"
+              className="w-full pl-12 pr-12 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition bg-white text-gray-900 placeholder-gray-400"
             />
+
+            {/* Toggle Eye Icon */}
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-0 bottom-0 my-auto text-gray-500"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-700"
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
@@ -208,17 +260,8 @@ const Login = () => {
           )}
         </div>
 
-        {/* Password Recovery */}
-        {state === 'Login' && (
-          <p className="text-center text-sm text-gray-500 mt-1">
-            Forgot your password?{' '}
-            <button type="button" className="text-primary hover:text-primary1 ml-1">
-              Reset it here
-            </button>
-          </p>
-        )}
       </motion.div>
-    </form>
+    </form >
   );
 };
 
