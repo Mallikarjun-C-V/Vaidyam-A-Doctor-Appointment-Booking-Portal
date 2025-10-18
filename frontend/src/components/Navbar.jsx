@@ -7,7 +7,7 @@ import { AppContext } from '../context/AppContext'
 const Navbar = () => {
     const navigate = useNavigate();
 
-    const {token, setToken} = useContext(AppContext)
+    const { token, setToken } = useContext(AppContext)
 
     const [showMenu, setShowMenu] = useState(false);
 
@@ -28,10 +28,11 @@ const Navbar = () => {
                 className='w-44 cursor-pointer hover:scale-105 transition-transform duration-300'
                 src={assets.logo}
                 alt=""
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8, ease: 'easeOut' }}
+                initial={{ opacity: 0, scale: 0.8 }}  // start smaller
+                animate={{ opacity: 1, scale: 1 }}    // grow to full size
+                transition={{ duration: 0.8, ease: 'linear' }}  // constant speed
             />
+
 
             <ul className='hidden md:flex items-center gap-8 font-medium'>
                 {[
