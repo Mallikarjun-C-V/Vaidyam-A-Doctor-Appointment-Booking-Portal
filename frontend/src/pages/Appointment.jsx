@@ -1,15 +1,18 @@
-import React, { useEffect, useState, useContext } from 'react'
-import { useParams } from 'react-router-dom'
+import React, { useEffect, useState, useContext, use } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { AppContext } from '../context/AppContext'
 import { assets } from '../assets/assets'
 import RelatedDoctors from '../components/RelatedDoctors'
 import { motion } from 'framer-motion'
+import { toast } from 'react-toastify'
 
 const Appointment = () => {
 
   const { docId } = useParams()
-  const { doctors, currencySymbol } = useContext(AppContext)
+  const { doctors, currencySymbol, backendUrl, token, getDoctorsData } = useContext(AppContext)
   const daysOfWeek = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
+
+  const navigate = useNavigate()
 
   const [docInfo, setDocInfo] = useState(null)
   const [docSlots, setDocSlots] = useState([])
@@ -47,6 +50,13 @@ const Appointment = () => {
         currentDate.setMinutes(currentDate.getMinutes() + 30)
       }
       setDocSlots(prev => ([...prev, timeSlots]))
+    }
+  }
+
+  const bookAppointment = async () => {
+    if (!token) {
+      toast.warn('Login to book appointment')
+      return navigate('/login')
     }
   }
 
@@ -149,6 +159,7 @@ const Appointment = () => {
         </div>
 
         <motion.button
+        onClick={bookAppointment}
           className='bg-primary text-white text-sm font-light px-14 py-3 rounded-full my-6'
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.97 }}
