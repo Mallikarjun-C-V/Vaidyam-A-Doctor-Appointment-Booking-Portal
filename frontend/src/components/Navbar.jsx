@@ -7,7 +7,7 @@ import { AppContext } from '../context/AppContext'
 const Navbar = () => {
     const navigate = useNavigate();
 
-    const { token, setToken } = useContext(AppContext)
+    const { token, setToken, userData } = useContext(AppContext)
 
     const [showMenu, setShowMenu] = useState(false);
 
@@ -63,41 +63,43 @@ const Navbar = () => {
             </ul>
 
             <div className='flex items-center gap-4'>
-                {token ? (
-                    <motion.div
-                        className='flex items-center gap-3 cursor-pointer group relative'
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.8 }}
-                    >
-                        <img className='w-10 h-10 rounded-full border-2 border-gray-200 hover:border-primary transition-colors duration-300 object-cover' src={assets.profile_pic} alt="" />
-                        <img className='w-2.5 group-hover:rotate-180 transition-transform duration-300' src={assets.dropdown_icon} alt="" />
-                        <div className='absolute top-full right-0 mt-3 text-base font-medium text-gray-600 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2'>
-                            <div className='min-w-56 bg-white rounded-lg shadow-xl border border-gray-100 flex flex-col p-2'>
-                                <p onClick={() => navigate('my-profile')} className='hover:bg-gray-50 hover:text-primary px-4 py-3 rounded-md cursor-pointer transition-all duration-200 flex items-center gap-3'>
-                                    <span className='text-lg'>👤</span> My Profile
-                                </p>
-                                <p onClick={() => navigate('my-appointments')} className='hover:bg-gray-50 hover:text-primary px-4 py-3 rounded-md cursor-pointer transition-all duration-200 flex items-center gap-3'>
-                                    <span className='text-lg'>📅</span> My Appointments
-                                </p>
-                                <p onClick={() => logout()} className='hover:bg-red-50 hover:text-red-600 px-4 py-3 rounded-md cursor-pointer transition-all duration-200 flex items-center gap-3'>
-                                    <span className='text-lg'>🚪</span> Logout
-                                </p>
-                            </div>
-                        </div>
-                    </motion.div>
-                ) : (
-                    <motion.button
-                        onClick={() => navigate('/login')}
-                        className='bg-primary text-white px-8 py-3 rounded-full hidden md:block hover:shadow-lg hover:scale-105 transition-all duration-300 relative overflow-hidden group'
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.8 }}
-                    >
-                        <span className='relative z-10'>Create account</span>
-                        <div className='absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300'></div>
-                    </motion.button>
-                )}
+                {
+                    token
+                        ? (
+                            <motion.div
+                                className='flex items-center gap-3 cursor-pointer group relative'
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.8 }}
+                            >
+                                <img className='w-10 h-10 rounded-full border-2 border-gray-200 hover:border-primary transition-colors duration-300 object-cover' src={userData.image} alt="" />
+                                <img className='w-2.5 group-hover:rotate-180 transition-transform duration-300' src={assets.dropdown_icon} alt="" />
+                                <div className='absolute top-full right-0 mt-3 text-base font-medium text-gray-600 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2'>
+                                    <div className='min-w-56 bg-white rounded-lg shadow-xl border border-gray-100 flex flex-col p-2'>
+                                        <p onClick={() => navigate('my-profile')} className='hover:bg-gray-50 hover:text-primary px-4 py-3 rounded-md cursor-pointer transition-all duration-200 flex items-center gap-3'>
+                                            <span className='text-lg'>👤</span> My Profile
+                                        </p>
+                                        <p onClick={() => navigate('my-appointments')} className='hover:bg-gray-50 hover:text-primary px-4 py-3 rounded-md cursor-pointer transition-all duration-200 flex items-center gap-3'>
+                                            <span className='text-lg'>📅</span> My Appointments
+                                        </p>
+                                        <p onClick={() => logout()} className='hover:bg-red-50 hover:text-red-600 px-4 py-3 rounded-md cursor-pointer transition-all duration-200 flex items-center gap-3'>
+                                            <span className='text-lg'>🚪</span> Logout
+                                        </p>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ) : (
+                            <motion.button
+                                onClick={() => navigate('/login')}
+                                className='bg-primary text-white px-8 py-3 rounded-full hidden md:block hover:shadow-lg hover:scale-105 transition-all duration-300 relative overflow-hidden group'
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.8 }}
+                            >
+                                <span className='relative z-10'>Create account</span>
+                                <div className='absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300'></div>
+                            </motion.button>
+                        )}
 
                 <img onClick={() => setShowMenu(true)} className='w-6 md:hidden cursor-pointer' src={assets.menu_icon} alt="" />
 

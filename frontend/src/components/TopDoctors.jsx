@@ -2,6 +2,7 @@ import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
 import { motion, useMotionValue, useTransform } from "framer-motion";
+import Loader from "./Loader";
 
 // Separate component for each doctor card to fix Hooks issue
 const DoctorCard = ({ item, index }) => {
@@ -62,6 +63,7 @@ const TopDoctors = () => {
   const { doctors } = useContext(AppContext);
   const navigate = useNavigate();
 
+
   return (
     <div className="flex flex-col items-center gap-6 mt-4 my-20 text-gray-900 md:mx-10">
       {/* Heading */}
@@ -86,10 +88,17 @@ const TopDoctors = () => {
 
       {/* Doctors Grid */}
       <div className="w-full grid grid-cols-auto gap-6 pt-8 gap-y-8 px-3 sm:px-0">
-        {doctors.slice(0, 10).map((item, index) => (
-          <DoctorCard key={item._id} item={item} index={index} />
-        ))}
+        {!doctors || doctors.length === 0 ? (
+          <div className="col-span-full flex justify-center items-center w-full">
+            <Loader message="Doctors are Loading" />
+          </div>
+        ) : (
+          doctors.slice(0, 10).map((item, index) => (
+            <DoctorCard key={item._id} item={item} index={index} />
+          ))
+        )}
       </div>
+
 
       {/* View All Doctors Button */}
       <motion.button
