@@ -85,7 +85,7 @@ const Myprofile = () => {
 
           ) : (
             <motion.img
-              className="w-40 h-40 rounded-full object-cover shadow-md border-4 border-white"
+              className="w-40 h-40 cursor-pointer rounded-full object-cover shadow-md border-4 border-white"
               src={userData.image}
               alt="Profile"
               initial={{ scale: 0 }}
