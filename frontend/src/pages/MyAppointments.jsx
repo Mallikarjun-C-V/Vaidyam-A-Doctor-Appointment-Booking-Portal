@@ -1,9 +1,48 @@
 import React, { useContext } from 'react'
 import { AppContext } from '../context/AppContext'
 import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { toast } from 'react-toastify'
+import { useEffect } from 'react'
+import axios from 'axios'
 
 const MyAppointments = () => {
-  const { doctors } = useContext(AppContext)
+  const { backendUrl, token } = useContext(AppContext)
+
+  const [appointments, setAppointments] = useState([])
+
+  const months = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  const slotDateFormat = (slot) => {
+
+    const dateArray = slot.split('_')
+    return dateArray[0]+ ","+months[Number(dateArray[1])] + "," + dateArray[2]
+
+  }
+
+  const getUserAppointments = async () => {
+
+    try {
+
+      const {data} = await axios.get(backendUrl+'/api/user/appointments', {headers:{token}})
+
+      if (data.success) {
+        setAppointments(data.appointments.reverse())        
+        console.log(data.appointments);
+      }
+      
+    } catch (error) {
+      console.log(error);
+      toast.error(error.message)
+    }
+
+  }
+
+  useEffect(() => {
+    if (token) {
+      getUserAppointments()
+    }
+  },[token])
 
   return (
     <motion.div 
@@ -17,7 +56,7 @@ const MyAppointments = () => {
       </h1>
 
       <div className='space-y-6'>
-        {doctors.slice(0, 3).map((item, index) => (
+        {appointments.map((item, index) => (
           <motion.div
             className='flex flex-col md:flex-row items-start p-6 bg-white rounded-xl shadow-lg border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300'
             key={index}
@@ -29,7 +68,7 @@ const MyAppointments = () => {
             <div className='flex-shrink-0 mb-4 md:mb-0 md:mr-6'>
               <motion.img
                 className='w-28 h-28 object-cover rounded-lg bg-indigo-50'
-                src={item.image}
+                src={item.docData.image}
                 alt={`Dr. ${item.name}`}
                 whileHover={{ scale: 1.1, rotate: 2 }}
                 transition={{ type: 'spring', stiffness: 180, damping: 12 }}
@@ -37,18 +76,18 @@ const MyAppointments = () => {
             </div>
 
             <div className='flex-grow text-sm text-gray-600 space-y-2'>
-              <p className='text-xl font-bold text-gray-900'>{item.name}</p>
-              <p className='text-indigo-600 font-medium -mt-1'>{item.speciality}</p>
+              <p className='text-xl font-bold text-gray-900'>{item.docData.name}</p>
+              <p className='text-indigo-600 font-medium -mt-1'>{item.docData.speciality}</p>
               
               <div className='!mt-4'> 
                 <p className='text-gray-700 font-semibold'>Address:</p>
-                <p className='text-xs text-gray-500'>{item.address.line1}</p>
-                <p className='text-xs text-gray-500'>{item.address.line2}</p>
+                <p className='text-xs text-gray-500'>{item.docData.address.line1}</p>
+                <p className='text-xs text-gray-500'>{item.docData.address.line2}</p>
               </div>
 
               <div className='!mt-4 inline-block bg-gray-100 text-gray-800 font-semibold px-3 py-1 rounded-full text-xs'>
                 <span className='mr-1.5'>🗓️</span>
-                Date & Time: 25, July, 2024 | 8:30 AM
+                Date & Time: {slotDateFormat(item.slotDate)} | {item.slotTime}
               </div>
             </div>
 
