@@ -28,7 +28,7 @@ const Appointment = () => {
     if (!docInfo) return
     const slotsArray = []
     const today = new Date()
-    const skipToday = today.getHours() > 20 || (today.getHours() === 20 && today.getMinutes() > 30)
+    const skipToday = today.getHours() > 20 || (today.getHours() === 19 && today.getMinutes() > 30)
 
     for (let i = 0; i < 7; i++) {
       let currentDate = new Date(today)
