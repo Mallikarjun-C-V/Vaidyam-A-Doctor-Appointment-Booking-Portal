@@ -5,13 +5,15 @@ import { useState } from 'react'
 import { toast } from 'react-toastify'
 import { useEffect } from 'react'
 import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
 
 const MyAppointments = () => {
   const { backendUrl, token, getDoctorsData } = useContext(AppContext)
 
   const [appointments, setAppointments] = useState([])
-
   const months = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  const navigate = useNavigate()
 
   const slotDateFormat = (slot) => {
 
@@ -51,6 +53,55 @@ const MyAppointments = () => {
         toast.error(data.message)
       }
 
+    } catch (error) {
+      console.log(error);
+      toast.error(error.message)
+    }
+    
+  }
+
+  const initPay = (order) => {
+
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+      amount: order.amount,
+      currency: order.currency,
+      name: 'Appointment Payment',
+      description: 'Appointment Payment',
+      order_id: order.id,
+      receipt: order.receipt,
+      handler: async (response) => {
+        console.log(response);
+
+        try {
+
+          const {data} = await axios.post(backendUrl+'/api/user/verifyRazorpay',response,{headers:{token}})
+          if (data.success) {
+            getUserAppointments()
+            navigate('/my-appointments')
+          }
+          
+        } catch (error) {
+          toast.error(error.message)
+        }
+      }
+    }
+    
+    const rzp = new window.Razorpay(options)
+    rzp.open()
+    
+  }
+  
+  const appointmentRazorpay = async (appointmentId) => {
+    
+    try {
+      
+      const {data} = await axios.post(backendUrl+'/api/user/payment-razorpay',{appointmentId},{headers:{token}})
+      
+      if (data.success) {
+        initPay(data.order)
+      }
+      
     } catch (error) {
       console.log(error);
       toast.error(error.message)
@@ -115,8 +166,19 @@ const MyAppointments = () => {
 
   {/* Buttons */}
   <div className="flex flex-col justify-center md:justify-center items-center md:items-start gap-3 mt-4 md:mt-0 md:ml-auto w-full md:w-auto">
-    {!item.cancelled && (
+    {!item.cancelled && item.payment && (
       <motion.button
+        className="text-sm font-semibold text-center w-full md:min-w-48 px-4 py-2 bg-green-600 text-white rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-all duration-300"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.97 }}        
+      >
+        Paid
+      </motion.button>
+    )}
+
+    {!item.cancelled && !item.payment && (
+      <motion.button
+        onClick={() => appointmentRazorpay(item._id)}
         className="text-sm font-semibold text-center w-full md:min-w-48 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-all duration-300"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.97 }}
