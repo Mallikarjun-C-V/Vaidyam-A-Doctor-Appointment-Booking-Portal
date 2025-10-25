@@ -11,16 +11,17 @@ const MyAppointments = () => {
   const { backendUrl, token, getDoctorsData } = useContext(AppContext)
 
   const [appointments, setAppointments] = useState([])
+  
   const months = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-  const navigate = useNavigate()
-
+  
   const slotDateFormat = (slot) => {
-
+    
     const dateArray = slot.split('_')
     return dateArray[0] + "," + months[Number(dateArray[1])] + "," + dateArray[2]
 
   }
+  
+  const navigate = useNavigate()
 
   const getUserAppointments = async () => {
 
