@@ -1,5 +1,5 @@
 import React, { useContext } from 'react'
-import Login from './pages/Login'
+import Login from './pages/Login.jsx'
 import { ToastContainer, toast } from 'react-toastify'
 import { AdminContext } from './context/AdminContext'
 import Navbar from './components/Navbar'
@@ -9,12 +9,14 @@ import AllApointements from './pages/Admin/AllApointements'
 import AddDoctor from './pages/Admin/AddDoctor'
 import DoctorsList from './pages/Admin/DoctorsList'
 import Dashboard from './pages/Admin/Dashboard'
+import { DoctorContext } from './context/DoctorContext.jsx'
 
 const App = () => {
 
   const { aToken } = useContext(AdminContext)
+  const { dToken } = useContext(DoctorContext)
 
-  return aToken ? (
+  return aToken || dToken ? (
     <div className='bg-[#F8F9FD]'>
       <ToastContainer />
       <Navbar/>
