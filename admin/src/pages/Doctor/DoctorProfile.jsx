@@ -1,12 +1,41 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { DoctorContext } from '../../context/DoctorContext';
 import { AppContext } from '../../context/AppContext';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const DoctorProfile = () => {
-  const { dToken, profileData, setProfileData, getProfileData } = useContext(DoctorContext);
+  const { dToken, profileData, setProfileData, getProfileData, backendUrl } = useContext(DoctorContext);
   const { currency } = useContext(AppContext);
 
   const [isEdit, setIsEdit] = useState(false);
+
+  const updateProfile = async () => {
+
+    try {
+
+      const updateData = {
+        address: profileData.address,
+        fees: profileData.fees,
+        available: profileData.available
+      }
+
+      const {data} = await axios.post(backendUrl+'/api/doctor/update-profile',updateData,{headers:{dToken}})
+
+      if (data.success) {
+        toast.success(data.message)
+        setIsEdit(false)
+        getProfileData()
+      } else {
+        toast.error(data.message)
+      }
+
+    } catch (error) {
+      toast.error(error.message)
+      console.log(error)
+    }
+
+  }
 
   useEffect(() => {
     getProfileData();
@@ -17,14 +46,14 @@ const DoctorProfile = () => {
   return (
     <div className=" w-full min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-10 px-4">
       <div className="max-w-5xl mx-auto">
-        
+
         {/* Main Profile Card */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-          
+
           {/* Header Section with Gradient */}
           <div className="bg-gradient-to-r from-blue-300 to-indigo-300 rounded-2xl px-8 py-8">
             <div className="flex flex-col md:flex-row gap-8 items-center md:items-end">
-              
+
               {/* Profile Image - Larger */}
               <div className="relative flex-shrink-0">
                 <div className="w-44 h-44 bg-primary rounded-2xl p-2">
@@ -35,9 +64,8 @@ const DoctorProfile = () => {
                   />
                 </div>
                 <span
-                  className={`absolute bottom-4 right-4 w-5 h-5 rounded-full border-4 border-white shadow-lg ${
-                    profileData.available ? 'bg-green-500' : 'bg-gray-400'
-                  }`}
+                  className={`absolute bottom-4 right-4 w-5 h-5 rounded-full border-4 border-white shadow-lg ${profileData.available ? 'bg-green-500' : 'bg-gray-400'
+                    }`}
                 ></span>
               </div>
 
@@ -62,7 +90,7 @@ const DoctorProfile = () => {
 
           {/* Content Section */}
           <div className="p-8">
-            
+
             {/* About Section */}
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-4">
@@ -78,19 +106,18 @@ const DoctorProfile = () => {
 
             {/* Info Cards Grid */}
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              
+
               {/* Appointment Fee Card */}
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                    </svg>
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white text-2xl font-bold transition-all duration-300 ${isEdit ? 'bg-emerald-700 animate-pulse' : 'bg-green-600'}`}>
+                    {currency}
                   </div>
                   <h3 className="font-semibold text-gray-900">Consultation Fee</h3>
                 </div>
+
                 <div className="flex items-baseline gap-1 mt-4">
-                  <span className="text-lg font-medium text-gray-600">{currency}</span>
+                  <span className="text-3xl font-black text-gray-600">{currency}</span>
                   {isEdit ? (
                     <input
                       type="number"
@@ -106,10 +133,11 @@ const DoctorProfile = () => {
                 </div>
               </div>
 
+
               {/* Availability Card */}
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white transition-all duration-300 ${isEdit ? 'bg-blue-700 animate-pulse' : 'bg-blue-600'}`}>
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -119,6 +147,7 @@ const DoctorProfile = () => {
                 <label className="flex items-center gap-3 cursor-pointer mt-4">
                   <div className="relative">
                     <input
+                      onChange={() => isEdit && setProfileData(prev => ({ ...prev, available: !prev.available }))}
                       type="checkbox"
                       checked={profileData.available}
                       readOnly
@@ -134,47 +163,59 @@ const DoctorProfile = () => {
               </div>
 
               {/* Address Card */}
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-200">
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-200 transition-all duration-300">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white transition-all duration-300 ${isEdit ? 'bg-pink-600 animate-pulse' : 'bg-purple-600'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+                      <circle cx="12" cy="9" r="2.5" />
+                      <path d="M4 20c1.5-1 4.5-2 8-2s6.5 1 8 2" strokeOpacity="0.5" />
                     </svg>
                   </div>
                   <h3 className="font-semibold text-gray-900">Clinic Address</h3>
                 </div>
-                <p className="text-gray-700 mt-4 leading-relaxed">
-                  {profileData.address.line1}
-                  <br />
-                  {profileData.address.line2}
-                </p>
+
+                <div className="mt-4">
+                  {isEdit ? (
+                    <div className="space-y-2 bg-white/60 backdrop-blur-sm border border-pink-200 rounded-lg p-3 shadow-sm transition-all duration-300">
+                      <input type="text" placeholder="Address Line 1" className="w-full bg-white border border-pink-300 rounded-md px-3 py-2 text-gray-800 focus:ring-2 focus:ring-pink-400 focus:outline-none"
+                        value={profileData.address.line1} onChange={(e) => setProfileData(prev => ({ ...prev, address: { ...prev.address, line1: e.target.value } }))} />
+                      <input type="text" placeholder="Address Line 2" className="w-full bg-white border border-pink-300 rounded-md px-3 py-2 text-gray-800 focus:ring-2 focus:ring-pink-400 focus:outline-none"
+                        value={profileData.address.line2} onChange={(e) => setProfileData(prev => ({ ...prev, address: { ...prev.address, line2: e.target.value } }))} />
+                    </div>
+                  ) : (
+                    <p className="text-gray-700 leading-relaxed">{profileData.address.line1}<br />{profileData.address.line2}</p>
+                  )}
+                </div>
               </div>
+
 
             </div>
 
             {/* Edit Button */}
             <div className="flex justify-center pt-4">
-              <button
-                onClick={() => setIsEdit(!isEdit)}
-                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center gap-2"
-              >
-                {isEdit ? (
-                  <>
+              {
+                isEdit
+                  ? <button
+                    onClick={()=>updateProfile()}
+                    className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center gap-2"
+                  >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                     </svg>
                     Save Changes
-                  </>
-                ) : (
-                  <>
+                  </button>
+
+                  : <button
+                    onClick={() => setIsEdit(true)}
+                    className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center gap-2"
+                  >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                     Edit Profile
-                  </>
-                )}
-              </button>
+                  </button>
+              }
             </div>
 
           </div>
