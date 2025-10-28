@@ -133,7 +133,7 @@ const Doctors = () => {
         className="
           bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 
           w-full 
-          h-48 
+          h-60
           object-cover 
           object-top
         "
