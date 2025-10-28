@@ -91,14 +91,22 @@ const Doctors = () => {
           ].map((spec, i) => (
             <p
               key={i}
-              onClick={() => speciality === spec ? navigate('/doctors') : navigate(`/doctors/${spec}`)}
+              onClick={() => {
+                if (speciality === spec) {
+                  navigate('/doctors')
+                } else {
+                  navigate(`/doctors/${spec}`)
+                }
+                setShowFilter(false) // 👈 hides filters after selecting
+              }}
               className={`px-4 py-2 rounded-lg border transition-all cursor-pointer font-medium ${speciality === spec
-                ? 'bg-indigo-600 text-white shadow-md'
-                : 'hover:bg-gray-100'
+                  ? 'bg-indigo-600 text-white shadow-md'
+                  : 'hover:bg-gray-100'
                 }`}
             >
               {spec}
             </p>
+
           ))}
         </motion.div>
 
@@ -121,11 +129,17 @@ const Doctors = () => {
               className="group bg-white border-2 border-gray-100 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 ease-out hover:shadow-2xl hover:border-blue-400 relative"
               style={{ transformStyle: 'preserve-3d' }}
             >
-              <img
-                className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 w-full h-48 object-cover"
-                src={item.image}
-                alt={item.name}
-              />
+      <img
+        className="
+          bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 
+          w-full 
+          h-48 
+          object-cover 
+          object-top
+        "
+        src={item.image}
+        alt={item.name}
+      />
               <div className="p-5">
                 <div className={`flex items-center gap-2 text-sm ${item.available ? 'text-emerald-600' : 'text-gray-600'} font-medium mb-3`}>
                   <span className="relative flex h-2.5 w-2.5">

@@ -38,10 +38,17 @@ const DoctorCard = ({ item, index }) => {
       onClick={() => navigate(`/appointment/${item._id}`)}
     >
       <img
-        className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 w-full h-48 object-cover"
+        className="
+          bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 
+          w-full 
+          h-48 
+          object-cover 
+          object-top
+        "
         src={item.image}
         alt={item.name}
       />
+
       <div className="p-5">
         <div className={`flex items-center gap-2 text-sm ${item.available ? 'text-emerald-600' : 'text-gray-600'} font-medium mb-3`}>
           <span className="relative flex h-2.5 w-2.5">
