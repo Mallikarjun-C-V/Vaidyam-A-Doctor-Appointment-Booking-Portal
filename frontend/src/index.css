@@ -21,3 +21,26 @@
         @apply text-white bg-primary
     }
 }
+
+/* Put this in index.css or Navbar.css */
+@media (max-width: 1000px) {
+  /* Hide desktop elements */
+  .custom-hide-desktop {
+    display: none !important;
+  }
+
+  /* Show mobile elements */
+  .custom-show-mobile {
+    display: flex !important;
+  }
+}
+
+@media (min-width: 1001px) {
+  .custom-hide-desktop {
+    display: flex !important;
+  }
+
+  .custom-show-mobile {
+    display: none !important;
+  }
+}

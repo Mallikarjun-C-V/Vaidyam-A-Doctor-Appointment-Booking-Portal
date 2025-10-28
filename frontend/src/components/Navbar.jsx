@@ -34,7 +34,7 @@ const Navbar = () => {
             />
 
 
-            <ul className='hidden md:flex items-center gap-8 font-medium'>
+            <ul className='custom-hide-desktop items-center gap-8 font-medium'>
                 {[
                     { label: "HOME", path: "/" },
                     { label: "ALL DOCTORS", path: "/doctors" },
@@ -49,16 +49,34 @@ const Navbar = () => {
                     >
                         {({ isActive }) => (
                             <motion.li
-                                className={`py-2 px-1 relative ${isActive ? "text-primary1 font-semibold text-lg" : "hover:text-primary"}`}
+                                className={`py-2 px-1 relative transition-all duration-300 ease-out
+                                    ${isActive
+                                        ? "text-primary font-semibold text-lg"
+                                        : "hover:text-primary1"
+                                    }`}
                                 initial={{ opacity: 0, y: -10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.5, delay: 0.1 * index, ease: 'easeOut' }}
+                                transition={{ duration: 0.5, delay: 0.1 * index, ease: "easeOut" }}
+                                style={{
+                                    textShadow: isActive
+                                        ? "0 0 4px rgba(59,130,246,0.4), 0 0 6px rgba(59,130,246,0.2)"
+                                        : "0 0 3px rgba(59,130,246,0.2)"
+                                }}
                             >
                                 {item.label}
-                                <hr className={`absolute bottom-0 left-0 right-0 h-0.5 bg-primary1 transition-transform duration-300 ${isActive ? "scale-x-100 h-1" : "scale-x-0 group-hover:scale-x-100"}`} />
+                                <hr
+                                    className={`absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full transition-transform duration-300 ${isActive ? "scale-x-100 h-1" : "scale-x-0 group-hover:scale-x-100"}`}
+                                    style={{
+                                        boxShadow: isActive
+                                            ? "0 0 6px rgba(59,130,246,0.5), 0 0 10px rgba(59,130,246,0.3)"
+                                            : "0 0 4px rgba(59,130,246,0.25)"
+                                    }}
+                                />
                             </motion.li>
                         )}
                     </NavLink>
+
+
                 ))}
             </ul>
 
@@ -72,14 +90,14 @@ const Navbar = () => {
                                 animate={{ opacity: 1 }}
                                 transition={{ duration: 0.8 }}
                             >
-                                <img className='w-10 h-10 rounded-full border-2 border-gray-200 hover:border-primary transition-colors duration-300 object-cover' src={userData.image} alt="" />
+                                <img className='w-10 h-10 rounded-full border-2 border-gray-200 hover:border-primary1 transition-colors duration-300 object-cover' src={userData.image} alt="" />
                                 <img className='w-2.5 group-hover:rotate-180 transition-transform duration-300' src={assets.dropdown_icon} alt="" />
                                 <div className='absolute top-full right-0 mt-3 text-base font-medium text-gray-600 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2'>
                                     <div className='min-w-56 bg-white rounded-lg shadow-xl border border-gray-100 flex flex-col p-2'>
-                                        <p onClick={() => navigate('my-profile')} className='hover:bg-gray-50 hover:text-primary px-4 py-3 rounded-md cursor-pointer transition-all duration-200 flex items-center gap-3'>
+                                        <p onClick={() => navigate('my-profile')} className='hover:bg-gray-50 hover:text-primary1 px-4 py-3 rounded-md cursor-pointer transition-all duration-200 flex items-center gap-3'>
                                             <span className='text-lg'>👤</span> My Profile
                                         </p>
-                                        <p onClick={() => navigate('my-appointments')} className='hover:bg-gray-50 hover:text-primary px-4 py-3 rounded-md cursor-pointer transition-all duration-200 flex items-center gap-3'>
+                                        <p onClick={() => navigate('my-appointments')} className='hover:bg-gray-50 hover:text-primary1 px-4 py-3 rounded-md cursor-pointer transition-all duration-200 flex items-center gap-3'>
                                             <span className='text-lg'>📅</span> My Appointments
                                         </p>
                                         <p onClick={() => logout()} className='hover:bg-red-50 hover:text-red-600 px-4 py-3 rounded-md cursor-pointer transition-all duration-200 flex items-center gap-3'>
@@ -91,7 +109,7 @@ const Navbar = () => {
                         ) : (
                             <motion.button
                                 onClick={() => navigate('/login')}
-                                className='bg-primary text-white px-8 py-3 rounded-full hidden md:block hover:shadow-lg hover:scale-105 transition-all duration-300 relative overflow-hidden group'
+                                className='bg-primary1 text-white px-8 py-3 rounded-full hidden md:block hover:shadow-lg hover:scale-105 transition-all duration-300 relative overflow-hidden group'
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ duration: 0.8 }}
@@ -101,7 +119,14 @@ const Navbar = () => {
                             </motion.button>
                         )}
 
-                <img onClick={() => setShowMenu(true)} className='w-6 md:hidden cursor-pointer' src={assets.menu_icon} alt="" />
+                <div className='custom-show-mobile items-center gap-3'>
+                    <img
+                        onClick={() => setShowMenu(true)}
+                        className='w-6 cursor-pointer'
+                        src={assets.menu_icon}
+                        alt="menu"
+                    />
+                </div>
 
                 {/* mobile menu */}
                 <motion.div
@@ -143,7 +168,7 @@ const Navbar = () => {
                                     key={index}
                                     onClick={() => setShowMenu(false)}
                                     to={item.path}
-                                    className={({ isActive }) => `px-6 py-4 text-base font-medium transition-all duration-200 border-l-4 ${isActive ? 'bg-primary/10 text-primary border-primary' : 'border-transparent hover:bg-gray-50 hover:border-gray-300'}`}
+                                    className={({ isActive }) => `px-6 py-4 text-base font-medium transition-all duration-200 border-l-4 ${isActive ? 'bg-primary1/10 text-primary1 border-primary1' : 'border-transparent hover:bg-gray-50 hover:border-gray-300'}`}
                                 >
                                     {item.label}
                                 </NavLink>
@@ -176,7 +201,7 @@ const Navbar = () => {
                             ) : (
                                 <button
                                     onClick={() => { navigate('/login'); setShowMenu(false); }}
-                                    className='w-full bg-primary text-white py-3 rounded-full font-medium hover:shadow-lg transition-all duration-300'
+                                    className='w-full bg-primary1 text-white py-3 rounded-full font-medium hover:shadow-lg transition-all duration-300'
                                 >
                                     Create account
                                 </button>

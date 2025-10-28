@@ -106,7 +106,7 @@ const TopDoctors = () => {
           navigate("/doctors");
           window.scrollTo(0, 0);
         }}
-        className="relative bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-12 py-4 text-base font-semibold rounded-full mt-8 transition-all duration-300 hover:shadow-xl hover:scale-105 hover:from-blue-700 hover:to-indigo-700 overflow-hidden"
+        className="relative bg-gradient-to-r from-blue-600 to-[#1976D2] text-white px-12 py-4 text-base font-semibold rounded-full mt-8 transition-all duration-300 hover:shadow-xl hover:scale-105 hover:from-blue-700 hover:to-indigo-700 overflow-hidden"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
