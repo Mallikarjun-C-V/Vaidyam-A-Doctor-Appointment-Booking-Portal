@@ -15,7 +15,7 @@ const DoctorCard = ({ item, index }) => {
   return (
     <motion.div
       key={item._id}
-      className="group bg-white border border-gray-200 rounded-2xl overflow-hidden cursor-pointer shadow-sm transition-all duration-500 ease-out hover:-translate-y-3 hover:shadow-2xl hover:border-blue-400 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50"
+      className="group bg-white border border-gray-200 rounded-2xl overflow-hidden cursor-pointer shadow-sm transition-all duration-500 ease-out hover:-translate-y-3 hover:shadow-2xl hover:border-blue-900 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50"
       style={{ rotateX, rotateY, perspective: 1000 }}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -113,18 +113,48 @@ const TopDoctors = () => {
         Simply browse through our extensive list of trusted doctors.
       </motion.p>
 
-      {/* Doctors Grid */}
-      <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 pt-8 px-3 sm:px-0">
-        {!doctors || doctors.length === 0 ? (
-          <div className="col-span-full flex justify-center items-center w-full">
-            <Loader message="Doctors are Loading" />
-          </div>
-        ) : (
-          doctors.slice(0, 8).map((item, index) => (
-            <DoctorCard key={item._id} item={item} index={index} />
-          ))
-        )}
-      </div>
+{/* Doctors Grid */}
+<div className="top-doctors-grid w-full gap-8 pt-8 px-3 sm:px-0">
+  {!doctors || doctors.length === 0 ? (
+    <div className="col-span-full flex justify-center items-center w-full">
+      <Loader message="Doctors are Loading" />
+    </div>
+  ) : (
+    doctors.slice(0, 8).map((item, index) => (
+      <DoctorCard key={item._id} item={item} index={index} />
+    ))
+  )}
+</div>
+<style>
+{`
+  .top-doctors-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  @media (max-width: 1200px) {
+    .top-doctors-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 900px) {
+    .top-doctors-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 550px) {
+    .top-doctors-grid {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+  }
+`}
+</style>
+
+
+
+
 
       {/* View All Doctors Button */}
       <motion.button
