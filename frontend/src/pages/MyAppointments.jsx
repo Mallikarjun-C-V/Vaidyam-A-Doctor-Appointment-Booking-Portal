@@ -4,25 +4,25 @@ import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
-import Loader from '../components/Loader' // ✅ make sure this import path is correct
+import Loader from '../components/Loader' // ✅ Make sure this import exists
 
 const MyAppointments = () => {
   const { backendUrl, token, getDoctorsData } = useContext(AppContext)
   const [appointments, setAppointments] = useState([])
-  const [loading, setLoading] = useState(false) // ✅ added loading state
+  const [loading, setLoading] = useState(false)            // ✅ For "Your Appointments are Loading"
+  const [cancelLoading, setCancelLoading] = useState(false) // ✅ For "Cancelling Your Appointment"
+  const navigate = useNavigate()
 
-  const months = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const months = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
   const slotDateFormat = (slot) => {
     const dateArray = slot.split('_')
     return dateArray[0] + "," + months[Number(dateArray[1])] + "," + dateArray[2]
   }
 
-  const navigate = useNavigate()
-
   const getUserAppointments = async () => {
     try {
-      setLoading(true) // ✅ start loader
+      setLoading(true) // ✅ Start loading
       const { data } = await axios.get(backendUrl + '/api/user/appointments', { headers: { token } })
       if (data.success) {
         setAppointments(data.appointments.reverse())
@@ -31,25 +31,48 @@ const MyAppointments = () => {
       console.log(error)
       toast.error(error.message)
     } finally {
-      setLoading(false) // ✅ stop loader
+      setLoading(false) // ✅ Stop loading
     }
   }
 
   const cancelAppointment = async (appointmentId) => {
+    setCancelLoading(true); // ✅ Start loader
+    const startTime = Date.now();
+
     try {
-      const { data } = await axios.post(backendUrl + '/api/user/cancel-appointment', { appointmentId }, { headers: { token } })
-      if (data.success) {
-        toast.success(data.message)
-        getUserAppointments()
-        getDoctorsData()
-      } else {
-        toast.error(data.message)
-      }
+      const { data } = await axios.post(
+        backendUrl + '/api/user/cancel-appointment',
+        { appointmentId },
+        { headers: { token } }
+      );
+
+      const elapsed = Date.now() - startTime;
+      const minDuration = 100; // 0.2 seconds
+      const delay = Math.max(0, minDuration - elapsed);
+
+      setTimeout(() => {
+        if (data.success) {
+          toast.success(data.message);
+          getUserAppointments();
+          getDoctorsData();
+        } else {
+          toast.error(data.message);
+        }
+        setCancelLoading(false); 
+      }, delay);
     } catch (error) {
-      console.log(error)
-      toast.error(error.message)
+      const elapsed = Date.now() - startTime;
+      const minDuration = 200;
+      const delay = Math.max(0, minDuration - elapsed);
+
+      setTimeout(() => {
+        console.log(error);
+        toast.error(error.message);
+        setCancelLoading(false); 
+      }, delay);
     }
-  }
+  };
+
 
   const initPay = (order) => {
     const options = {
@@ -61,7 +84,6 @@ const MyAppointments = () => {
       order_id: order.id,
       receipt: order.receipt,
       handler: async (response) => {
-        console.log(response)
         try {
           const { data } = await axios.post(backendUrl + '/api/user/verifyRazorpay', response, { headers: { token } })
           if (data.success) {
@@ -90,9 +112,7 @@ const MyAppointments = () => {
   }
 
   useEffect(() => {
-    if (token) {
-      getUserAppointments()
-    }
+    if (token) getUserAppointments()
   }, [token])
 
   return (
@@ -106,9 +126,11 @@ const MyAppointments = () => {
         My Appointments
       </h1>
 
-      {/* ✅ Loader shown while fetching appointments */}
+      {/* ✅ Show Loader When Loading Appointments */}
       {loading ? (
         <Loader message="Your Appointments are Loading" />
+      ) : cancelLoading ? (
+        <Loader message="Cancelling Your Appointment" />
       ) : (
         <div className='space-y-6'>
           {appointments.map((item, index) => (
