@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { AppContext } from '../context/AppContext'
 import { motion } from 'framer-motion'
+import Loader from '../components/Loader'
 
 const Doctors = () => {
   const { speciality } = useParams()
@@ -27,10 +28,8 @@ const Doctors = () => {
     const y = e.clientY - rect.top
     const midX = rect.width / 2
     const midY = rect.height / 2
-
-    const rotateX = ((y - midY) / midY) * 6 // subtle tilt
+    const rotateX = ((y - midY) / midY) * 6
     const rotateY = ((x - midX) / midX) * -6
-
     card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`
   }
 
@@ -92,12 +91,9 @@ const Doctors = () => {
             <p
               key={i}
               onClick={() => {
-                if (speciality === spec) {
-                  navigate('/doctors')
-                } else {
-                  navigate(`/doctors/${spec}`)
-                }
-                setShowFilter(false) // 👈 hides filters after selecting
+                if (speciality === spec) navigate('/doctors')
+                else navigate(`/doctors/${spec}`)
+                setShowFilter(false)
               }}
               className={`px-4 py-2 rounded-lg border transition-all cursor-pointer font-medium ${speciality === spec
                   ? 'bg-indigo-600 text-white shadow-md'
@@ -106,57 +102,121 @@ const Doctors = () => {
             >
               {spec}
             </p>
-
           ))}
         </motion.div>
 
         {/* Doctors Grid */}
+        {/* Doctors Grid */}
         <motion.div
-          className="w-full grid grid-cols-auto gap-6 pt-8 gap-y-8 px-3 sm:px-0"
+          className="top-doctors-grid w-full gap-8 pt-8 px-3 sm:px-0"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
         >
-          {filterDoc.map((item, index) => (
-            <motion.div
-              id={`doctor-card-${index}`}
-              key={index}
-              onClick={() => navigate(`/appointment/${item._id}`)}
-              onMouseMove={(e) => handleMouseMove(e, index)}
-              onMouseLeave={() => handleMouseLeave(index)}
-              whileHover={{ scale: 1.05 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-              className="group bg-white border-2 border-gray-100 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 ease-out hover:shadow-2xl hover:border-blue-400 relative"
-              style={{ transformStyle: 'preserve-3d' }}
-            >
-      <img
-        className="
-          bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 
-          w-full 
-          h-60
-          object-cover 
-          object-top
-        "
-        src={item.image}
-        alt={item.name}
-      />
-              <div className="p-5">
-                <div className={`flex items-center gap-2 text-sm ${item.available ? 'text-emerald-600' : 'text-gray-600'} font-medium mb-3`}>
-                  <span className="relative flex h-2.5 w-2.5">
-                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${item.available ? 'bg-emerald-400' : 'bg-gray-400'} opacity-75`}></span>
-                    <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${item.available ? 'bg-emerald-500' : 'bg-gray-500'}`}></span>
-                  </span>
-                  <p>Available</p>
+          {!filterDoc || filterDoc.length === 0 ? (
+            <div className="col-span-full flex justify-center items-center w-full py-20">
+              <Loader message="Doctors are Loading" />
+            </div>
+          ) : (
+            filterDoc.map((item, index) => (
+              <motion.div
+                id={`doctor-card-${index}`}
+                key={index}
+                onClick={() => navigate(`/appointment/${item._id}`)}
+                onMouseMove={(e) => handleMouseMove(e, index)}
+                onMouseLeave={() => handleMouseLeave(index)}
+                whileHover={{ scale: 1.03 }}
+                transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                className="group bg-white border border-gray-200 rounded-2xl overflow-hidden cursor-pointer shadow-sm transition-all duration-500 ease-out hover:-translate-y-3 hover:shadow-2xl hover:border-blue-900 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 relative"
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                {/* Doctor Image */}
+                <div className="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 w-full h-60 object-cover object-top">
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-110 group-hover:rotate-1"
+                  />
+
+                  {/* Availability Badge */}
+                  <div className="absolute top-3 right-3">
+                    <div
+                      className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full shadow-md backdrop-blur-sm transition-all duration-300 ${item.available
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : 'bg-gray-100 text-gray-600 border border-gray-200'
+                        }`}
+                    >
+                      <span
+                        className={`h-2 w-2 rounded-full ${item.available ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'
+                          }`}
+                      ></span>
+                      {item.available ? 'Available' : 'Unavailable'}
+                    </div>
+                  </div>
+
+                  {/* Hover Glow Overlay */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-t from-blue-600/10 via-transparent to-transparent transition-opacity duration-500"></div>
                 </div>
-                <p className="text-gray-900 text-xl font-semibold mb-1 group-hover:text-blue-600 transition-colors duration-300">
-                  {item.name}
-                </p>
-                <p className="text-gray-500 text-sm font-medium">{item.speciality}</p>
-              </div>
-            </motion.div>
-          ))}
+
+                {/* Card Content */}
+                <div className="p-6 text-center relative z-10">
+                  <p className="text-gray-900 text-xl font-semibold mb-1 transition-colors duration-300 group-hover:text-blue-700">
+                    {item.name}
+                  </p>
+                  <p className="text-gray-500 text-sm font-medium mb-4">
+                    {item.speciality}
+                  </p>
+                </div>
+
+                {/* Outer Glow on Hover */}
+                <div className="absolute inset-0 rounded-2xl ring-0 ring-blue-300/40 group-hover:ring-4 transition-all duration-500 pointer-events-none"></div>
+              </motion.div>
+            ))
+          )}
         </motion.div>
+
       </div>
+
+      {/* Scoped Grid CSS */}
+      <style>
+        {`
+  .top-doctors-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  @media (max-width: 1400px) {
+    .top-doctors-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .top-doctors-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 800px) {
+    .top-doctors-grid {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 640px) {
+    .top-doctors-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 500px) {
+    .top-doctors-grid {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+  }
+`}
+      </style>
+
     </motion.div>
   )
 }

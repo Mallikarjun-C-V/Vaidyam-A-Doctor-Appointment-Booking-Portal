@@ -28,11 +28,10 @@ const Navbar = () => {
                 className='w-44 cursor-pointer hover:scale-105 transition-transform duration-300'
                 src={assets.logo}
                 alt=""
-                initial={{ opacity: 0, scale: 0.8 }}  // start smaller
-                animate={{ opacity: 1, scale: 1 }}    // grow to full size
-                transition={{ duration: 0.8, ease: 'linear' }}  // constant speed
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, ease: 'linear' }}
             />
-
 
             <ul className='custom-hide-desktop items-center gap-8 font-medium'>
                 {[
@@ -75,8 +74,6 @@ const Navbar = () => {
                             </motion.li>
                         )}
                     </NavLink>
-
-
                 ))}
             </ul>
 
@@ -109,7 +106,7 @@ const Navbar = () => {
                         ) : (
                             <motion.button
                                 onClick={() => navigate('/login')}
-                                className='bg-primary1 text-white px-8 py-3 rounded-full hidden md:block hover:shadow-lg hover:scale-105 transition-all duration-300 relative overflow-hidden group'
+                                className='bg-primary1 text-white px-8 py-3 rounded-full hidden lg:block hover:shadow-lg hover:scale-105 transition-all duration-300 relative overflow-hidden group'
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ duration: 0.8 }}
@@ -117,9 +114,11 @@ const Navbar = () => {
                                 <span className='relative z-10'>Create account</span>
                                 <div className='absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300'></div>
                             </motion.button>
-                        )}
+                        )
+                }
 
-                <div className='custom-show-mobile items-center gap-3'>
+                {/* ✅ UPDATED: make menu icon visible up to 1000px */}
+                <div className='flex items-center gap-3 lg:hidden'>
                     <img
                         onClick={() => setShowMenu(true)}
                         className='w-6 cursor-pointer'
@@ -128,9 +127,9 @@ const Navbar = () => {
                     />
                 </div>
 
-                {/* mobile menu */}
+                {/* ✅ UPDATED: mobile menu visible up to lg breakpoint (1000px) */}
                 <motion.div
-                    className={`fixed left-0 right-0 top-0 md:hidden z-50 transition-all duration-500 ease-in-out ${showMenu ? 'visible' : 'invisible'}`}
+                    className={`fixed left-0 right-0 top-0 lg:hidden z-50 transition-all duration-500 ease-in-out ${showMenu ? 'visible' : 'invisible'}`}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: showMenu ? 1 : 0 }}
                 >
