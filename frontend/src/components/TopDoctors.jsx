@@ -4,11 +4,9 @@ import { AppContext } from "../context/AppContext";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import Loader from "./Loader";
 
-// Separate component for each doctor card to fix Hooks issue
 const DoctorCard = ({ item, index }) => {
   const navigate = useNavigate();
 
-  // Motion hooks at top level of this component
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotateX = useTransform(y, [-50, 50], [5, -5]);
@@ -17,13 +15,12 @@ const DoctorCard = ({ item, index }) => {
   return (
     <motion.div
       key={item._id}
-      className="group bg-white border-2 border-gray-100 rounded-2xl overflow-hidden cursor-pointer relative transition-all duration-300 ease-out hover:border-blue-400 hover:shadow-2xl"
+      className="group bg-white border border-gray-200 rounded-2xl overflow-hidden cursor-pointer shadow-sm transition-all duration-500 ease-out hover:-translate-y-3 hover:shadow-2xl hover:border-blue-400 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50"
       style={{ rotateX, rotateY, perspective: 1000 }}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      whileHover={{ scale: 1.07 }}
       onMouseMove={(e) => {
         const rect = e.currentTarget.getBoundingClientRect();
         const posX = e.clientX - rect.left - rect.width / 2;
@@ -37,31 +34,55 @@ const DoctorCard = ({ item, index }) => {
       }}
       onClick={() => navigate(`/appointment/${item._id}`)}
     >
-      <img
-        className="
-          bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 
-          w-full 
-          h-60
-          object-cover 
-          object-top
-        "
-        src={item.image}
-        alt={item.name}
-      />
+      {/* Doctor Image */}
+      <div className="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 w-full h-60 object-cover object-top">
+        <img
+          src={item.image}
+          alt={item.name}
+          className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-110 group-hover:rotate-1"
+        />
 
-      <div className="p-5">
-        <div className={`flex items-center gap-2 text-sm ${item.available ? 'text-emerald-600' : 'text-gray-600'} font-medium mb-3`}>
-          <span className="relative flex h-2.5 w-2.5">
-            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${item.available ? 'bg-emerald-400' : 'bg-gray-400'} opacity-75`}></span>
-            <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${item.available ? 'bg-emerald-500' : 'bg-gray-500'}`}></span>
-          </span>
-          <p>Available</p>
+        {/* Availability Badge */}
+        <div className="absolute top-3 right-3">
+          <div
+            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full shadow-md backdrop-blur-sm transition-all duration-300 ${
+              item.available
+                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                : "bg-gray-100 text-gray-600 border border-gray-200"
+            }`}
+          >
+            <span
+              className={`h-2 w-2 rounded-full ${
+                item.available ? "bg-emerald-500 animate-pulse" : "bg-gray-400"
+              }`}
+            ></span>
+            {item.available ? "Available" : "Unavailable"}
+          </div>
         </div>
-        <p className="text-gray-900 text-xl font-semibold mb-1 group-hover:text-blue-600 transition-colors duration-300">
+
+        {/* Hover Glow Overlay */}
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-t from-blue-600/10 via-transparent to-transparent transition-opacity duration-500"></div>
+      </div>
+
+      {/* Card Content */}
+      <div className="p-6 text-center relative z-10">
+        <p className="text-gray-900 text-xl font-semibold mb-1 transition-colors duration-300 group-hover:text-blue-700">
           {item.name}
         </p>
-        <p className="text-gray-500 text-sm font-medium">{item.speciality}</p>
+        <p className="text-gray-500 text-sm font-medium mb-4">
+          {item.speciality}
+        </p>
+
+        {/* Hover Button (Hidden on Small Screens) */}
+        <div className="hidden sm:flex justify-center">
+          <button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium px-5 py-2 rounded-full transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 ease-out shadow-md hover:shadow-lg hover:brightness-110">
+            Book Appointment
+          </button>
+        </div>
       </div>
+
+      {/* Outer Glow on Hover */}
+      <div className="absolute inset-0 rounded-2xl ring-0 ring-blue-300/40 group-hover:ring-4 transition-all duration-500 pointer-events-none"></div>
     </motion.div>
   );
 };
@@ -69,7 +90,6 @@ const DoctorCard = ({ item, index }) => {
 const TopDoctors = () => {
   const { doctors } = useContext(AppContext);
   const navigate = useNavigate();
-
 
   return (
     <div className="flex flex-col items-center gap-6 mt-4 my-20 text-gray-900 md:mx-10">
@@ -94,18 +114,17 @@ const TopDoctors = () => {
       </motion.p>
 
       {/* Doctors Grid */}
-      <div className="w-full grid grid-cols-auto gap-6 pt-8 gap-y-8 px-3 sm:px-0">
+      <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 pt-8 px-3 sm:px-0">
         {!doctors || doctors.length === 0 ? (
           <div className="col-span-full flex justify-center items-center w-full">
             <Loader message="Doctors are Loading" />
           </div>
         ) : (
-          doctors.slice(0, 10).map((item, index) => (
+          doctors.slice(0, 8).map((item, index) => (
             <DoctorCard key={item._id} item={item} index={index} />
           ))
         )}
       </div>
-
 
       {/* View All Doctors Button */}
       <motion.button

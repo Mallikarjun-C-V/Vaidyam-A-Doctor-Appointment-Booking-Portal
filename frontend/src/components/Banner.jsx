@@ -8,7 +8,7 @@ const Banner = () => {
 
     return (
         <div className="flex flex-col md:flex-row bg-gradient-to-r from-blue-400 to-indigo-500 rounded-3xl 
-                        px-8 sm:px-12 md:px-16 lg:px-14 my-24 md:mx-10 shadow-xl relative overflow-hidden">
+                        px-8 sm:px-12 md:px-16 lg:px-14 my-24 md:mx-10 shadow-xl relative ">
             
             {/* left */}
             <motion.div

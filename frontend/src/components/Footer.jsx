@@ -40,7 +40,7 @@ const Footer = () => {
             transition={{ duration: 0.55, delay: 0.25, ease: 'easeOut' }}
             viewport={{ once: true }}
           >
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestiae libero ea quo nihil exercitationem, animi nesciunt culpa cumque quasi eaque ratione, autem facilis cum sequi quis, iste magnam provident minus. Quis distinctio assumenda laborum dolore.
+            <span className='text-primary font-semibold'>Vaidyam</span> is a doctor appointment booking website that makes healthcare access simple. Users can find doctors, view profiles, and book visits with ease. It manages schedules, reminders, and patient records securely, ensuring a smooth and trusted experience for both patients and doctors.
           </motion.p>
         </div>
 
