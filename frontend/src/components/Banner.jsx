@@ -1,15 +1,29 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { assets } from '../assets/assets'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { AppContext } from '../context/AppContext'
+import { toast } from 'react-toastify'
 
 const Banner = () => {
+    const { token } = useContext(AppContext)
     const navigate = useNavigate()
+
+    const loggedin = () => {
+        if (token) {
+            toast.success("You’re already logged into your account")
+            scrollTo(0, 0)
+
+        } else {
+            navigate('/login')
+            scrollTo(0, 0)
+        }
+    }
 
     return (
         <div className="flex flex-col md:flex-row bg-gradient-to-r from-blue-400 to-indigo-500 rounded-3xl 
                         px-8 sm:px-12 md:px-16 lg:px-14 my-24 md:mx-10 shadow-xl relative ">
-            
+
             {/* left */}
             <motion.div
                 className='flex-1 py-12 sm:py-16 lg:py-24 lg:pl-5 
@@ -24,7 +38,7 @@ const Banner = () => {
                     <p className='mt-4'>With 100+ Trusted Doctors</p>
                 </div>
                 <button
-                    onClick={() => { navigate('/login'); scrollTo(0, 0) }}
+                    onClick={() => { loggedin() }}
                     className='bg-white text-sm sm:text-base text-gray-600 px-8 py-3 rounded-full mt-6 hover:scale-105 transition-all'
                 >
                     Create account
@@ -39,7 +53,7 @@ const Banner = () => {
                 transition={{ duration: 0.8, ease: 'easeOut' }}
                 viewport={{ once: true }}
             >
-                <img 
+                <img
                     className='w-full max-w-md object-contain md:absolute md:bottom-0 md:right-0'
                     src={assets.appointment_img}
                     alt="appointment banner"

@@ -4,13 +4,13 @@ import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
-import Loader from '../components/Loader' // ✅ Make sure this import exists
+import Loader from '../components/Loader'
 
 const MyAppointments = () => {
   const { backendUrl, token, getDoctorsData } = useContext(AppContext)
   const [appointments, setAppointments] = useState([])
-  const [loading, setLoading] = useState(false)            // ✅ For "Your Appointments are Loading"
-  const [cancelLoading, setCancelLoading] = useState(false) // ✅ For "Cancelling Your Appointment"
+  const [loading, setLoading] = useState(false)
+  const [cancelLoading, setCancelLoading] = useState(false)
   const navigate = useNavigate()
 
   const months = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -58,7 +58,7 @@ const MyAppointments = () => {
         } else {
           toast.error(data.message);
         }
-        setCancelLoading(false); 
+        setCancelLoading(false);
       }, delay);
     } catch (error) {
       const elapsed = Date.now() - startTime;
@@ -68,10 +68,14 @@ const MyAppointments = () => {
       setTimeout(() => {
         console.log(error);
         toast.error(error.message);
-        setCancelLoading(false); 
+        setCancelLoading(false);
       }, delay);
     }
   };
+
+  const gotoDoctor = () => {
+    navigate('/')
+  }
 
 
   const initPay = (order) => {
@@ -145,18 +149,19 @@ const MyAppointments = () => {
               {/* Doctor Image */}
               <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-6">
                 <motion.img
-                  className="w-32 h-32 md:w-36 md:h-36 object-cover rounded-xl bg-indigo-50"
+                  className="w-32 h-32 md:w-36 md:h-36 object-cover rounded-xl bg-indigo-50 cursor-pointer"
                   src={item.docData.image}
                   alt={`Dr. ${item.name}`}
                   whileHover={{ scale: 1.1, rotate: 2 }}
                   transition={{ type: 'spring', stiffness: 180, damping: 12 }}
+                  onClick={() => navigate(`/appointment/${item.docId}`)}
                 />
               </div>
 
               {/* Doctor Info */}
               <div className="flex-grow text-sm text-gray-600 space-y-2 text-center md:text-left">
-                <p className="text-xl font-bold text-gray-900">{item.docData.name}</p>
-                <p className="text-indigo-600 font-medium -mt-1">{item.docData.speciality}</p>
+                <p onClick={() => navigate(`/appointment/${item.docId}`)} className="text-xl font-bold text-gray-900 cursor-pointer">{item.docData.name}</p>
+                <p onClick={() => navigate(`/doctors/${item.docData.speciality}`)} className="text-indigo-600 font-medium -mt-1 cursor-pointer">{item.docData.speciality}</p>
 
                 <div className="!mt-4">
                   <p className="text-gray-700 font-semibold">Address:</p>
