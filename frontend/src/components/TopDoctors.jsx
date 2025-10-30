@@ -45,16 +45,14 @@ const DoctorCard = ({ item, index }) => {
         {/* Availability Badge */}
         <div className="absolute top-3 right-3">
           <div
-            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full shadow-md backdrop-blur-sm transition-all duration-300 ${
-              item.available
+            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full shadow-md backdrop-blur-sm transition-all duration-300 ${item.available
                 ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                 : "bg-gray-100 text-gray-600 border border-gray-200"
-            }`}
+              }`}
           >
             <span
-              className={`h-2 w-2 rounded-full ${
-                item.available ? "bg-emerald-500 animate-pulse" : "bg-gray-400"
-              }`}
+              className={`h-2 w-2 rounded-full ${item.available ? "bg-emerald-500 animate-pulse" : "bg-gray-400"
+                }`}
             ></span>
             {item.available ? "Available" : "Unavailable"}
           </div>
@@ -74,35 +72,35 @@ const DoctorCard = ({ item, index }) => {
         </p>
 
         {/* Hover Button (Hidden on Small Screens) */}
-{/* Hover Button (Enhanced) */}
-<div className="hidden sm:flex justify-center mt-4">
-  <button
-    onClick={() => navigate(`/appointment/${item._id}`)}
-    className="relative bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold px-6 py-2.5 rounded-full 
+        {/* Hover Button (Enhanced) */}
+        <div className="hidden sm:flex justify-center mt-4">
+          <button
+            onClick={() => navigate(`/appointment/${item._id}`)}
+            className="relative bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold px-6 py-2.5 rounded-full 
                transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100
                transition-all duration-500 ease-out shadow-md hover:shadow-lg hover:scale-105 focus:outline-none overflow-hidden"
-  >
-    <span className="relative z-10 flex items-center gap-2">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="w-4 h-4 text-white"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth="2"
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-      </svg>
-      Book Appointment
-    </span>
+          >
+            <span className="relative z-10 flex items-center gap-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-4 h-4 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Book Appointment
+            </span>
 
-    {/* Animated Glow Layer */}
-    <span
-      className="absolute inset-0 bg-gradient-to-r from-blue-500/40 via-indigo-500/40 to-purple-500/40 opacity-0 
+            {/* Animated Glow Layer */}
+            <span
+              className="absolute inset-0 bg-gradient-to-r from-blue-500/40 via-indigo-500/40 to-purple-500/40 opacity-0 
                  group-hover:opacity-100 blur-md transition-opacity duration-700"
-    ></span>
-  </button>
-</div>
+            ></span>
+          </button>
+        </div>
 
       </div>
 
@@ -138,20 +136,20 @@ const TopDoctors = () => {
         Simply browse through our extensive list of trusted doctors.
       </motion.p>
 
-{/* Doctors Grid */}
-<div className="top-doctors-grid w-full gap-8 pt-8 px-3 sm:px-0">
-  {!doctors || doctors.length === 0 ? (
-    <div className="col-span-fuzll flex justify-center items-center w-full">
-      <Loader message="Doctors are Loading" />
-    </div>
-  ) : (
-    doctors.slice(0, 8).map((item, index) => (
-      <DoctorCard key={item._id} item={item} index={index} />
-    ))
-  )}
-</div>
-<style>
-{`
+      {/* Doctors Grid */}
+      <div className="top-doctors-grid w-full gap-8 pt-8 px-3 sm:px-0">
+        {!doctors || doctors.length === 0 ? (
+          <div className="col-span-full flex justify-center items-center w-full">
+            <Loader message="Doctors are Loading" />
+          </div>
+        ) : (
+          doctors.slice(0, 8).map((item, index) => (
+            <DoctorCard key={item._id} item={item} index={index} />
+          ))
+        )}
+      </div>
+      <style>
+        {`
   .top-doctors-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -175,7 +173,7 @@ const TopDoctors = () => {
     }
   }
 `}
-</style>
+      </style>
 
 
 

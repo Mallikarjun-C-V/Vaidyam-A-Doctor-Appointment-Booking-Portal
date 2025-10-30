@@ -1,8 +1,12 @@
 import React from 'react'
 import { assets } from '../assets/assets'
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 
 const Contact = () => {
+
+  const navigate = useNavigate()
+  
   return (
     <motion.div 
       initial={{ opacity: 0 }} 
@@ -54,6 +58,7 @@ const Contact = () => {
 
           <motion.button 
             className='border border-black px-8 py-4 text-sm hover:bg-black hover:text-white transition-all duration-500'
+            onClick={()=>navigate('/jobs')}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.97 }}
             transition={{ type: "spring", stiffness: 200, damping: 12 }}
