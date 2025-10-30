@@ -9,7 +9,7 @@ import axios from 'axios'
 
 const Appointment = () => {
   const { docId } = useParams()
-  const { doctors, currencySymbol, backendUrl, token, getDoctorsData } = useContext(AppContext)
+  const { userData, doctors, currencySymbol, backendUrl, token, getDoctorsData } = useContext(AppContext)
   const daysOfWeek = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
   const navigate = useNavigate()
@@ -71,42 +71,59 @@ const Appointment = () => {
     setDocSlots(slotsArray)
   }
 
-  const bookAppointment = async () => {
-    if (!token) {
-      toast.warn('Login to book appointment')
-      return navigate('/login')
-    }
-
-    if (!slotTime) {
-      toast.error('Select a time slot')
-      return
-    }
-
-    try {
-      const dateObj = docSlots[slotIndex][0].datetime
-      const day = dateObj.getDate()
-      const month = dateObj.getMonth() + 1
-      const year = dateObj.getFullYear()
-      const slotDate = day + "_" + month + "_" + year
-
-      const { data } = await axios.post(
-        backendUrl + '/api/user/book-appointment',
-        { docId, slotDate, slotTime },
-        { headers: { token } }
-      )
-
-      if (data.success) {
-        toast.success(data.message)
-        getDoctorsData()
-        navigate('/my-appointments')
-      } else {
-        toast.error(data.message)
-      }
-    } catch (error) {
-      console.log(error)
-      toast.error(error.message)
-    }
+const bookAppointment = async () => {
+  // Instant navigation version
+  if (!token) {
+    navigate('/login'); // ⏩ navigate instantly
+    setTimeout(() => toast.warn('Please login to book an appointment'), 0);
+    return;
   }
+
+  if (
+    !userData?.phone ||
+    !userData?.gender ||
+    !userData?.dob ||
+    !userData?.address?.line1
+  ) {
+    navigate('/my-profile'); // ⏩ navigate instantly
+    setTimeout(() => {
+      toast.error('Please update your profile information to proceed with booking an appointment.');
+    }, 0);
+    return;
+  }
+
+  if (!slotTime) {
+    toast.error('Please select a time slot');
+    return;
+  }
+
+  // Book appointment logic
+  try {
+    const dateObj = docSlots[slotIndex][0].datetime;
+    const day = dateObj.getDate();
+    const month = dateObj.getMonth() + 1;
+    const year = dateObj.getFullYear();
+    const slotDate = `${day}_${month}_${year}`;
+
+    const { data } = await axios.post(
+      backendUrl + '/api/user/book-appointment',
+      { docId, slotDate, slotTime },
+      { headers: { token } }
+    );
+
+    if (data.success) {
+      navigate('/my-appointments'); // ⏩ navigate instantly
+      setTimeout(() => toast.success(data.message), 0);
+      getDoctorsData();
+    } else {
+      toast.error(data.message);
+    }
+  } catch (error) {
+    console.log(error);
+    toast.error(error.message);
+  }
+};
+
 
   useEffect(() => { fetchDocInfo() }, [doctors, docId])
   useEffect(() => { getAvailableSlots() }, [docInfo])
