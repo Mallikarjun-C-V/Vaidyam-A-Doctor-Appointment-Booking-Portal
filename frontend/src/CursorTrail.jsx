@@ -51,7 +51,7 @@ const CursorTrail = () => {
 
       const cursor = window.getComputedStyle(element).cursor;
       const wasPointer = isPointer.current;
-      const nowPointer = cursor === 'pointer';
+      const nowPointer = cursor === 'pointer' || cursor === 'not-allowed';
 
       // --- Pointer explosion ---
       if (!wasPointer && nowPointer) createExplosion(e.clientX, e.clientY);

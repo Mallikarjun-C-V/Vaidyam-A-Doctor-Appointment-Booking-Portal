@@ -24,6 +24,7 @@ const Appointment = () => {
     setDocInfo(docInfo)
   }
 
+  // ✅ Booked slots appear in red instead of being removed
   const getAvailableSlots = () => {
     if (!docInfo) return
     const slotsArray = []
@@ -39,7 +40,6 @@ const Appointment = () => {
       endTime.setHours(21, 0, 0, 0) // end at 9 PM
 
       if (!skipToday && today.getDate() === currentDate.getDate()) {
-        // today, start from next available slot
         const nextHour = today.getHours() >= 10 ? today.getHours() + 1 : 10
         const nextMinutes = today.getMinutes() > 30 ? 30 : 0
         currentDate.setHours(nextHour, nextMinutes, 0, 0)
@@ -55,75 +55,75 @@ const Appointment = () => {
         const year = currentDate.getFullYear()
         const slotDate = date + "_" + month + "_" + year
 
-        const isSlotAvailable =
-          docInfo.slots_booked[slotDate] && docInfo.slots_booked[slotDate].includes(formattedTime)
-            ? false
-            : true
+        const isBooked =
+          docInfo.slots_booked[slotDate] &&
+          docInfo.slots_booked[slotDate].includes(formattedTime)
 
-        if (isSlotAvailable) {
-          timeSlots.push({ datetime: new Date(currentDate), time: formattedTime })
-        }
+        timeSlots.push({
+          datetime: new Date(currentDate),
+          time: formattedTime,
+          booked: isBooked
+        })
+
         currentDate.setMinutes(currentDate.getMinutes() + 30)
       }
+
       slotsArray.push(timeSlots)
     }
 
     setDocSlots(slotsArray)
   }
 
-const bookAppointment = async () => {
-  // Instant navigation version
-  if (!token) {
-    navigate('/login'); // ⏩ navigate instantly
-    setTimeout(() => toast.warn('Please login to book an appointment'), 0);
-    return;
-  }
-
-  if (
-    !userData?.phone ||
-    !userData?.gender ||
-    !userData?.dob ||
-    !userData?.address?.line1
-  ) {
-    navigate('/my-profile'); // ⏩ navigate instantly
-    setTimeout(() => {
-      toast.error('Please update your profile information to proceed with booking an appointment.');
-    }, 0);
-    return;
-  }
-
-  if (!slotTime) {
-    toast.error('Please select a time slot');
-    return;
-  }
-
-  // Book appointment logic
-  try {
-    const dateObj = docSlots[slotIndex][0].datetime;
-    const day = dateObj.getDate();
-    const month = dateObj.getMonth() + 1;
-    const year = dateObj.getFullYear();
-    const slotDate = `${day}_${month}_${year}`;
-
-    const { data } = await axios.post(
-      backendUrl + '/api/user/book-appointment',
-      { docId, slotDate, slotTime },
-      { headers: { token } }
-    );
-
-    if (data.success) {
-      navigate('/my-appointments'); // ⏩ navigate instantly
-      setTimeout(() => toast.success(data.message), 0);
-      getDoctorsData();
-    } else {
-      toast.error(data.message);
+  const bookAppointment = async () => {
+    if (!token) {
+      navigate('/login')
+      setTimeout(() => toast.warn('Please login to book an appointment'), 0)
+      return
     }
-  } catch (error) {
-    console.log(error);
-    toast.error(error.message);
-  }
-};
 
+    if (
+      !userData?.phone ||
+      !userData?.gender ||
+      !userData?.dob ||
+      !userData?.address?.line1
+    ) {
+      navigate('/my-profile')
+      setTimeout(() => {
+        toast.error('Please update your profile information to proceed with booking an appointment.')
+      }, 0)
+      return
+    }
+
+    if (!slotTime) {
+      toast.error('Please select a time slot')
+      return
+    }
+
+    try {
+      const dateObj = docSlots[slotIndex][0].datetime
+      const day = dateObj.getDate()
+      const month = dateObj.getMonth() + 1
+      const year = dateObj.getFullYear()
+      const slotDate = `${day}_${month}_${year}`
+
+      const { data } = await axios.post(
+        backendUrl + '/api/user/book-appointment',
+        { docId, slotDate, slotTime },
+        { headers: { token } }
+      )
+
+      if (data.success) {
+        navigate('/my-appointments')
+        setTimeout(() => toast.success(data.message), 0)
+        getDoctorsData()
+      } else {
+        toast.error(data.message)
+      }
+    } catch (error) {
+      console.log(error)
+      toast.error(error.message)
+    }
+  }
 
   useEffect(() => { fetchDocInfo() }, [doctors, docId])
   useEffect(() => { getAvailableSlots() }, [docInfo])
@@ -162,24 +162,50 @@ const bookAppointment = async () => {
       <motion.div className='sm:ml-72 sm:pl-4 mt-4 font-medium text-gray-700' initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }} viewport={{ once: true }}>
         <p>Booking Slots</p>
 
+        {/* Days */}
         <div className='flex gap-3 items-center w-full overflow-x-scroll mt-4'>
           {docSlots.length && docSlots.map((item, index) => (
-            <motion.div key={index} onClick={() => setSlotIndex(index)} whileHover={{ scale: 1.1, rotate: -1 }} transition={{ type: "spring", stiffness: 180, damping: 12 }} className={`text-center py-6 min-w-16 rounded-full cursor-pointer ${slotIndex === index ? 'bg-primary text-white' : 'border border-gray-200'}`}>
+            <motion.div
+              key={index}
+              onClick={() => setSlotIndex(index)}
+              whileHover={{ scale: 1.1, rotate: -1 }}
+              transition={{ type: "spring", stiffness: 180, damping: 12 }}
+              className={`text-center py-6 min-w-16 rounded-full cursor-pointer ${slotIndex === index ? 'bg-primary text-white' : 'border border-gray-200'}`}
+            >
               <p>{item[0] && daysOfWeek[item[0].datetime.getDay()]}</p>
               <p>{item[0] && item[0].datetime.getDate()}</p>
             </motion.div>
           ))}
         </div>
 
+        {/* Time Slots */}
         <div className='flex items-center gap-3 w-full overflow-x-scroll mt-4'>
           {docSlots.length && docSlots[slotIndex].map((item, index) => (
-            <motion.p key={index} onClick={() => setSlotTime(item.time)} whileHover={{ scale: 1.1 }} transition={{ duration: 0.2 }} className={`text-sm font-light flex-shrink-0 px-5 py-2 rounded-full cursor-pointer ${item.time === slotTime ? 'bg-primary text-white' : 'text-gray-400 border border-gray-300'}`}>
+            <motion.p
+              key={index}
+              onClick={() => !item.booked && setSlotTime(item.time)}
+              whileHover={{ scale: item.booked ? 1 : 1.1 }}
+              transition={{ duration: 0.2 }}
+              className={`text-sm font-light flex-shrink-0 px-5 py-2 rounded-full select-none
+                ${item.booked
+                  ? 'bg-red-500 text-white cursor-not-allowed'
+                  : item.time === slotTime
+                    ? 'bg-primary text-white cursor-pointer'
+                    : 'text-gray-400 border border-gray-300 cursor-pointer hover:bg-gray-100'
+                }`}
+            >
               {item.time.toLowerCase()}
             </motion.p>
           ))}
         </div>
 
-        <motion.button onClick={bookAppointment} className='bg-primary text-white text-sm font-light px-14 py-3 rounded-full my-6' whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} transition={{ type: "spring", stiffness: 200, damping: 10 }}>
+        <motion.button
+          onClick={bookAppointment}
+          className='bg-primary text-white text-sm font-light px-14 py-3 rounded-full my-6'
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.97 }}
+          transition={{ type: "spring", stiffness: 200, damping: 10 }}
+        >
           Book an appointment
         </motion.button>
       </motion.div>
