@@ -13,6 +13,7 @@ import { DoctorContext } from './context/DoctorContext.jsx'
 import DoctorDashboard from './pages/Doctor/DoctorDashboard.jsx'
 import DoctorAppointments from './pages/Doctor/DoctorAppointments.jsx'
 import DoctorProfile from './pages/Doctor/DoctorProfile.jsx'
+import ChangePassword from './pages/Admin/ChangePassword.jsx'
 
 const App = () => {
 
@@ -32,6 +33,7 @@ const App = () => {
           <Route path='/all-appointments' element={<AllApointements/>}/>
           <Route path='/add-doctors' element={<AddDoctor/>} />
           <Route path='/doctor-list' element={<DoctorsList/>} />
+          <Route path='/change-doctor-password' element={<ChangePassword/>}/>
 
           {/* Doctor Route */}
           <Route path='/doctor-dashboard' element={<DoctorDashboard/>} />

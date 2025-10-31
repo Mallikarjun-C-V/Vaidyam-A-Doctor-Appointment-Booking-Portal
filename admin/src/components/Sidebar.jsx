@@ -81,17 +81,31 @@ const Sidebar = () => {
                                 <img src={assets.people_icon} alt="" className='w-5 h-5' />
                                 <p className='font-medium text-sm'>Doctors List</p>
                             </NavLink>
+
+                            <NavLink
+                                className={({ isActive }) => `flex items-center gap-3 py-3.5 px-4 rounded-lg cursor-pointer transition-all duration-200 ease-in-out 
+                                    ${isActive
+                                        ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
+                                        : 'text-gray-700 hover:bg-gray-50 border-l-4 border-transparent'
+                                    }
+                            `}
+                                to={'/change-doctor-password'}
+                            >
+                                <img src={assets.password_icon} alt="" className='w-5 h-5' />
+                                <p className='font-medium text-sm'>Change Doctor Password</p>
+                            </NavLink>
+
                         </ul>
                     </div>
                 )}
 
-                {
+            {
                 dToken && (
                     <div className='py-6'>
                         {/* Sidebar Header */}
                         <div className='px-6 mb-10'>
                             <h2 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 drop-shadow-lg transform transition-transform duration-300 hover:scale-105">
-                                Admin Panel
+                                Doctor Panel
                             </h2>
                             <p className='text-sm text-gray-500 mt-1'>Manage your clinic</p>
                         </div>
