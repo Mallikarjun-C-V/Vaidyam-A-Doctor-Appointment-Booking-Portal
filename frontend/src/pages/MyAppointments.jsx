@@ -73,6 +73,23 @@ const MyAppointments = () => {
     }
   };
 
+  const isAppointmentExpired = (item) => {
+    try {
+      const [day, month, year] = item.slotDate.split('_');
+      const appointmentStart = new Date(`${month} ${day}, ${year} ${item.slotTime}`);
+
+      // Add 30 minutes buffer to represent end time
+      const appointmentEnd = new Date(appointmentStart.getTime() + 30 * 60000);
+
+      const now = new Date();
+      return now > appointmentEnd;
+    } catch (err) {
+      console.error("Error parsing appointment date:", err);
+      return false;
+    }
+  };
+
+
   const gotoDoctor = () => {
     navigate('/')
   }
@@ -187,7 +204,7 @@ const MyAppointments = () => {
                   </motion.button>
                 )}
 
-                {!item.cancelled && !item.payment && !item.isCompleted && (
+                {!item.cancelled && !item.payment && !item.isCompleted && !isAppointmentExpired(item) && (
                   <motion.button
                     onClick={() => appointmentRazorpay(item._id)}
                     className="text-sm font-semibold text-center w-full md:min-w-48 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-all duration-300"
@@ -198,7 +215,7 @@ const MyAppointments = () => {
                   </motion.button>
                 )}
 
-                {!item.cancelled && !item.isCompleted && (
+                {!item.cancelled && !item.isCompleted && !isAppointmentExpired(item) && (
                   <motion.button
                     onClick={() => cancelAppointment(item._id)}
                     className="text-sm font-semibold text-center w-full md:min-w-48 px-4 py-2 bg-transparent text-red-600 border border-red-300 rounded-lg hover:bg-red-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 transition-all duration-300"
@@ -230,6 +247,19 @@ const MyAppointments = () => {
                     Appointment Completed
                   </motion.div>
                 )}
+
+                {/* Expired / No Status Available */}
+                {!item.cancelled && !item.isCompleted && isAppointmentExpired(item) && (
+                  <motion.div
+                    className="text-sm font-semibold text-center w-full md:min-w-48 px-4 py-2 bg-gray-200 text-gray-600 border border-gray-300 rounded-lg cursor-not-allowed select-none h-[44px]"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    No Status Available (Expired)
+                  </motion.div>
+                )}
+
               </div>
             </motion.div>
           ))}

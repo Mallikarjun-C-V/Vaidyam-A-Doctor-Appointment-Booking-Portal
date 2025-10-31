@@ -68,70 +68,87 @@ const loginDoctor = async (req, res) => {
 // API to get  doctor appointments for doctor panel
 
 const appointmentsDoctor = async (req, res) => {
+  try {
+    const { docId } = req.body;
+    const appointments = await appointmentModel.find({ docId });
 
-    try {
+    // Optionally tag expired appointments
+    const withExpiryInfo = appointments.map((a) => ({
+      ...a._doc,
+      expired: isAppointmentExpired(a),
+    }));
 
-        const { docId } = req.body
-        const appointments = await appointmentModel.find({ docId })
+    res.json({ success: true, appointments: withExpiryInfo });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
 
-        res.json({ success: true, appointments })
-
-    } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message })
-    }
-
-}
 
 // API to mark appointment completed for doctor panel
 
 const appointmentComplete = async (req, res) => {
+  try {
+    const { docId, appointmentId } = req.body;
+    const appointmentData = await appointmentModel.findById(appointmentId);
 
-    try {
-
-        const { docId, appointmentId } = req.body
-        const appointmentData = await appointmentModel.findById(appointmentId)
-
-        if (appointmentData && appointmentData.docId === docId) {
-
-            await appointmentModel.findByIdAndUpdate(appointmentId, { isCompleted: true })
-            return res.json({ success: true, message: 'Appointment Completed' })
-
-        } else {
-            return res.json({ success: false, message: 'Mark Failed' })
-        }
-
-    } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message })
+    if (!appointmentData || appointmentData.docId !== docId) {
+      return res.json({ success: false, message: "Mark Failed" });
     }
 
-}
+    // ✅ Allow marking completed even if expired
+    const expired = isAppointmentExpired(appointmentData);
+
+    await appointmentModel.findByIdAndUpdate(appointmentId, {
+      isCompleted: true,
+      cancelled: false,
+    });
+
+    res.json({
+      success: true,
+      message: expired
+        ? "Appointment marked completed (after scheduled time)"
+        : "Appointment marked completed",
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
 
 // API to cancel appointment for doctor panel
 
 const appointmentCancel = async (req, res) => {
+  try {
+    const { docId, appointmentId } = req.body;
+    const appointmentData = await appointmentModel.findById(appointmentId);
 
-    try {
-
-        const { docId, appointmentId } = req.body
-        const appointmentData = await appointmentModel.findById(appointmentId)
-
-        if (appointmentData && appointmentData.docId === docId) {
-
-            await appointmentModel.findByIdAndUpdate(appointmentId, { cancelled: true })
-            return res.json({ success: true, message: 'Appointment Cancelled' })
-
-        } else {
-            return res.json({ success: false, message: 'Cancellation Failed' })
-        }
-
-    } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message })
+    if (!appointmentData || appointmentData.docId !== docId) {
+      return res.json({ success: false, message: "Cancellation Failed" });
     }
 
-}
+    // ✅ Allow cancellation even after time expired
+    const expired = isAppointmentExpired(appointmentData);
+
+    await appointmentModel.findByIdAndUpdate(appointmentId, {
+      cancelled: true,
+      isCompleted: false,
+    });
+
+    res.json({
+      success: true,
+      message: expired
+        ? "Appointment cancelled (after scheduled time)"
+        : "Appointment cancelled successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
 
 // API to get dashboard data for doctor panel
 
@@ -211,6 +228,25 @@ const updateDoctorProfile = async (req, res) => {
 
 }
 
+// Helper to check if appointment is expired (now > startTime + 30min)
+const isAppointmentExpired = (appointment) => {
+  try {
+    const [day, month, year] = appointment.slotDate.split('_');
+    const appointmentStart = new Date(`${month} ${day}, ${year} ${appointment.slotTime}`);
+
+    // Add 30 minutes to the start time
+    const appointmentEnd = new Date(appointmentStart.getTime() + 30 * 60000);
+
+    // Compare current time with appointment end time
+    return new Date() > appointmentEnd;
+  } catch (err) {
+    console.error("Error checking appointment expiration:", err);
+    return false;
+  }
+};
+
+
+
 export {
     changeAvailability,
     doctorList,
@@ -220,5 +256,6 @@ export {
     appointmentCancel,
     doctorDashboard,
     doctorProfile,
-    updateDoctorProfile
+    updateDoctorProfile,
+    isAppointmentExpired
 }
