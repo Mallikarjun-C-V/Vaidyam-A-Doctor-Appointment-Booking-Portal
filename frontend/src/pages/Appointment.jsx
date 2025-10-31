@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useContext } from 'react'
+import React, { useEffect, useState, useContext, useRef } from 'react'
+import { createPortal } from 'react-dom' // ✅ ADD THIS
 import { useNavigate, useParams } from 'react-router-dom'
 import { AppContext } from '../context/AppContext'
 import { assets } from '../assets/assets'
@@ -18,13 +19,14 @@ const Appointment = () => {
   const [docSlots, setDocSlots] = useState([])
   const [slotIndex, setSlotIndex] = useState(0)
   const [slotTime, setSlotTime] = useState('')
+  const [hoveredSlot, setHoveredSlot] = useState(null)
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 }) // ✅ NEW
 
   const fetchDocInfo = () => {
     const docInfo = doctors.find(doc => doc._id === docId)
     setDocInfo(docInfo)
   }
 
-  // ✅ Booked slots appear in red instead of being removed
   const getAvailableSlots = () => {
     if (!docInfo) return
     const slotsArray = []
@@ -37,7 +39,7 @@ const Appointment = () => {
       else currentDate.setDate(today.getDate() + i)
 
       const endTime = new Date(currentDate)
-      endTime.setHours(21, 0, 0, 0) // end at 9 PM
+      endTime.setHours(21, 0, 0, 0)
 
       if (!skipToday && today.getDate() === currentDate.getDate()) {
         const nextHour = today.getHours() >= 10 ? today.getHours() + 1 : 10
@@ -125,21 +127,58 @@ const Appointment = () => {
     }
   }
 
+  // ✅ NEW: Handle tooltip positioning
+  const handleMouseEnter = (e, slotId, isBooked) => {
+    if (!isBooked) return
+    
+    const rect = e.currentTarget.getBoundingClientRect()
+    setTooltipPos({
+      x: rect.left + rect.width / 2,
+      y: rect.top - 10
+    })
+    setHoveredSlot(slotId)
+  }
+
   useEffect(() => { fetchDocInfo() }, [doctors, docId])
   useEffect(() => { getAvailableSlots() }, [docInfo])
 
   return docInfo && (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, ease: "easeOut" }} className="overflow-hidden">
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      transition={{ duration: 0.6, ease: "easeOut" }}
+    >
       {/* Doctor Details */}
-      <motion.div className='flex flex-col sm:flex-row gap-4' initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }} viewport={{ once: true }}>
-        <motion.div whileHover={{ scale: 1.03, rotate: 0.5 }} transition={{ type: "spring", stiffness: 180, damping: 12 }}>
+      <motion.div 
+        className='flex flex-col sm:flex-row gap-4' 
+        initial={{ opacity: 0, y: 30 }} 
+        whileInView={{ opacity: 1, y: 0 }} 
+        transition={{ duration: 0.8, ease: "easeOut" }} 
+        viewport={{ once: true }}
+      >
+        <motion.div 
+          whileHover={{ scale: 1.03, rotate: 0.5 }} 
+          transition={{ type: "spring", stiffness: 180, damping: 12 }}
+        >
           <img className='bg-primary w-full sm:max-w-72 rounded-lg' src={docInfo.image} alt="" />
         </motion.div>
 
-        <motion.div className='flex-1 border border-gray-400 rounded-lg p-8 py-7 bg-white mx-2 sm:mx-0 mt-[-80px] sm:mt-0' initial={{ opacity: 0, x: 50 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }} viewport={{ once: true }}>
+        <motion.div 
+          className='flex-1 border border-gray-400 rounded-lg p-8 py-7 bg-white mx-2 sm:mx-0 mt-[-80px] sm:mt-0' 
+          initial={{ opacity: 0, x: 50 }} 
+          whileInView={{ opacity: 1, x: 0 }} 
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }} 
+          viewport={{ once: true }}
+        >
           <p className='flex items-center gap-2 text-2xl font-medium text-gray-900'>
             {docInfo.name}
-            <motion.img className='w-5' src={assets.verified_icon} alt="" animate={{ rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 3 }} />
+            <motion.img 
+              className='w-5' 
+              src={assets.verified_icon} 
+              alt="" 
+              animate={{ rotate: [0, 10, -10, 0] }} 
+              transition={{ repeat: Infinity, duration: 3 }} 
+            />
           </p>
           <div className='flex items-center gap-2 text-sm mt-1 text-gray-600'>
             <p>{docInfo.degree} - {docInfo.speciality}</p>
@@ -159,7 +198,13 @@ const Appointment = () => {
       </motion.div>
 
       {/* Booking Slots */}
-      <motion.div className='sm:ml-72 sm:pl-4 mt-4 font-medium text-gray-700' initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }} viewport={{ once: true }}>
+      <motion.div 
+        className='sm:ml-72 sm:pl-4 mt-4 font-medium text-gray-700' 
+        initial={{ opacity: 0, y: 40 }} 
+        whileInView={{ opacity: 1, y: 0 }} 
+        transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }} 
+        viewport={{ once: true }}
+      >
         <p>Booking Slots</p>
 
         {/* Days */}
@@ -178,25 +223,32 @@ const Appointment = () => {
           ))}
         </div>
 
-        {/* Time Slots */}
+        {/* Time Slots - WITH PORTAL */}
         <div className='flex items-center gap-3 w-full overflow-x-scroll mt-4'>
-          {docSlots.length && docSlots[slotIndex].map((item, index) => (
-            <motion.p
-              key={index}
-              onClick={() => !item.booked && setSlotTime(item.time)}
-              whileHover={{ scale: item.booked ? 1 : 1.1 }}
-              transition={{ duration: 0.2 }}
-              className={`text-sm font-light flex-shrink-0 px-5 py-2 rounded-full select-none
-                ${item.booked
-                  ? 'bg-red-500 text-white cursor-not-allowed'
-                  : item.time === slotTime
-                    ? 'bg-primary text-white cursor-pointer'
-                    : 'text-gray-400 border border-gray-300 cursor-pointer hover:bg-gray-100'
-                }`}
-            >
-              {item.time.toLowerCase()}
-            </motion.p>
-          ))}
+          {docSlots.length && docSlots[slotIndex].map((item, index) => {
+            const slotId = `${slotIndex}-${index}`
+            
+            return (
+              <div key={index} className='relative'>
+                <motion.p
+                  onClick={() => !item.booked && setSlotTime(item.time)}
+                  onMouseEnter={(e) => handleMouseEnter(e, slotId, item.booked)}
+                  onMouseLeave={() => setHoveredSlot(null)}
+                  whileHover={{ scale: item.booked ? 1 : 1.1 }}
+                  transition={{ duration: 0.2 }}
+                  className={`text-sm font-light flex-shrink-0 px-5 py-2 rounded-full select-none
+                    ${item.booked
+                      ? 'bg-red-500 text-white cursor-not-allowed'
+                      : item.time === slotTime
+                        ? 'bg-primary text-white cursor-pointer'
+                        : 'text-gray-400 border border-gray-300 cursor-pointer hover:bg-gray-100'
+                    }`}
+                >
+                  {item.time.toLowerCase()}
+                </motion.p>
+              </div>
+            )
+          })}
         </div>
 
         <motion.button
@@ -212,6 +264,44 @@ const Appointment = () => {
 
       {/* Related Doctors */}
       <RelatedDoctors docId={docId} speciality={docInfo.speciality} />
+
+      {/* ✅ TOOLTIP PORTAL - Renders outside overflow container */}
+      {hoveredSlot && createPortal(
+        <div 
+          style={{
+            position: 'fixed',
+            left: tooltipPos.x,
+            top: tooltipPos.y,
+            transform: 'translate(-50%, -100%)',
+            zIndex: 99999,
+            pointerEvents: 'none'
+          }}
+        >
+          <div style={{
+            backgroundColor: '#1f2937',
+            color: 'white',
+            fontSize: '12px',
+            padding: '8px 12px',
+            borderRadius: '8px',
+            whiteSpace: 'nowrap',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.3)'
+          }}>
+            Not Available
+            <div style={{
+              position: 'absolute',
+              top: '100%',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 0,
+              height: 0,
+              borderLeft: '6px solid transparent',
+              borderRight: '6px solid transparent',
+              borderTop: '6px solid #1f2937'
+            }}></div>
+          </div>
+        </div>,
+        document.body
+      )}
     </motion.div>
   )
 }
