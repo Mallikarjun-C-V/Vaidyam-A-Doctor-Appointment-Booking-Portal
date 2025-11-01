@@ -4,7 +4,7 @@ import { ToastContainer, toast } from 'react-toastify'
 import { AdminContext } from './context/AdminContext'
 import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes, Navigate } from 'react-router-dom'
 import AllApointements from './pages/Admin/AllApointements'
 import AddDoctor from './pages/Admin/AddDoctor'
 import DoctorsList from './pages/Admin/DoctorsList'
@@ -23,22 +23,24 @@ const App = () => {
   return aToken || dToken ? (
     <div className='bg-[#F8F9FD]'>
       <ToastContainer />
-      <Navbar/>
+      <Navbar />
       <div className='flex items-start'>
-        <Sidebar/>
+        <Sidebar />
         <Routes>
+          {aToken && <Route path='/' element={<Navigate to='/admin-dashboard' replace />} />}
+          {dToken && <Route path='/' element={<Navigate to='/doctor-profile' replace />} />}
+
           {/* Admin Route */}
-          <Route path='/' element={<></>} />
-          <Route path='/admin-dashboard' element={<Dashboard/>} />
-          <Route path='/all-appointments' element={<AllApointements/>}/>
-          <Route path='/add-doctors' element={<AddDoctor/>} />
-          <Route path='/doctor-list' element={<DoctorsList/>} />
-          <Route path='/change-doctor-password' element={<ChangePassword/>}/>
+          <Route path='/admin-dashboard' element={<Dashboard />} />
+          <Route path='/all-appointments' element={<AllApointements />} />
+          <Route path='/add-doctors' element={<AddDoctor />} />
+          <Route path='/doctor-list' element={<DoctorsList />} />
+          <Route path='/change-doctor-password' element={<ChangePassword />} />
 
           {/* Doctor Route */}
-          <Route path='/doctor-dashboard' element={<DoctorDashboard/>} />
-          <Route path='/doctor-appointments' element={<DoctorAppointments/>} />
-          <Route path='/doctor-profile' element={<DoctorProfile/>} />
+          <Route path='/doctor-dashboard' element={<DoctorDashboard />} />
+          <Route path='/doctor-appointments' element={<DoctorAppointments />} />
+          <Route path='/doctor-profile' element={<DoctorProfile />} />
         </Routes>
       </div>
     </div>

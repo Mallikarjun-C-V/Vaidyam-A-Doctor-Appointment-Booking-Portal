@@ -12,15 +12,19 @@ import appointments_icon from './appointments_icon.svg'
 import earning_icon from './earning_icon.svg'
 import patients_icon from './patients_icon.svg'
 import password_icon from './password_icon.svg'
+import menu_icon from './menu_icon.svg'
+import cancel1_icon from './cancel1_icon.svg'
 
 export const assets = {
     add_icon,
     admin_logo,
     appointment_icon,
     cancel_icon,
+    cancel1_icon,
     doctor_icon,
     upload_area,
     home_icon,
+    menu_icon,
     patients_icon,
     people_icon,
     password_icon,
