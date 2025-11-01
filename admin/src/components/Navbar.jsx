@@ -39,7 +39,7 @@ const Navbar = () => {
         {/* Logo */}
         <img className='w-36 sm:w-40 cursor-pointer' src={assets.admin_logo} alt="" />
         
-        <span className="ml-2 text-sm sm:text-base border cursor-pointer border-gray-300 text-gray-700 px-3 py-1 rounded-full bg-gray-50 font-medium hidden sm:block">
+        <span className="ml-4 text-sm sm:text-base border cursor-pointer border-gray-300 text-gray-700 px-3 py-1 rounded-full bg-gray-50 font-medium hidden sm:block">
           {aToken ? 'Admin Panel' : 'Doctor Portal'}
         </span>
       </div>

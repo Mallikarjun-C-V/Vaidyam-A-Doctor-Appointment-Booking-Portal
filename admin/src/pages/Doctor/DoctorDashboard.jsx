@@ -28,7 +28,7 @@ const DoctorDashboard = () => {
   }
 
   return (
-  <div className="flex justify-center align-middle w-full px-6">
+    <div className="flex justify-center align-middle w-full px-6">
       <div className="m-5 space-y-6">
         {/* ===== Top Summary Cards ===== */}
         <div className="flex flex-wrap gap-4">
