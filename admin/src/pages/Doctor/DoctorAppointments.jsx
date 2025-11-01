@@ -1,32 +1,41 @@
-import React from 'react'
-import { useContext } from 'react'
-import { DoctorContext } from '../../context/DoctorContext'
-import { useEffect } from 'react'
-import { AppContext } from '../../context/AppContext'
-import { assets } from '../../assets/assets'
+import React, { useContext, useEffect } from 'react';
+import { DoctorContext } from '../../context/DoctorContext';
+import { AppContext } from '../../context/AppContext';
+import { assets } from '../../assets/assets';
 
 const DoctorAppointments = () => {
+  const { dToken, appointments, getAppointments, completeAppointment, cancelAppointment } =
+    useContext(DoctorContext);
 
-  const { dToken, appointments, getAppointments, completeAppointment, cancelAppointment } = useContext(DoctorContext)
-
-  const { calculateAge, slotDateFormat, currency } = useContext(AppContext)
+  const { calculateAge, slotDateFormat, currency } = useContext(AppContext);
 
   useEffect(() => {
     if (dToken) {
-      getAppointments()
+      getAppointments();
     }
-  }, [dToken])
+  }, [dToken]);
 
   return (
-    <div className='w-full max-w-6xl m-5'>
+    <div className="w-full max-w-7xl mx-auto p-6 bg-gradient-to-br from-gray-50 via-white to-gray-100 min-h-screen">
+      {/* ===== Page Header ===== */}
+      <div className="flex items-center justify-between mb-10 bg-gradient-to-r from-blue-100 to-gray-100 border border-indigo-100 rounded-xl p-6 shadow-sm">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight leading-tight">
+            All Appointments
+          </h1>
+          <p className="text-gray-600 text-sm mt-2">
+            View and manage all your patient appointments in one place
+          </p>
+        </div>
+      </div>
 
-      <p className='mb-3 text-lg font-medium'>All Appointments</p>
 
-      <div className='bg-white border rounded text-sm max-h-[80vh] min-h-[50vh] overflow-y-scroll'>
-
-        <div className='max-sm:hidden grid grid-cols-[0.5fr_2fr_1fr_1fr_3fr_1fr_1fr] gap-1 py-3 px-6 border-b'>
+      {/* ===== Table Container ===== */}
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden backdrop-blur-sm">
+        {/* Table Header */}
+        <div className="hidden sm:grid grid-cols-[0.5fr_2fr_1fr_1fr_3fr_1fr_1fr] py-4 px-6 bg-gradient-to-r from-blue-100 to-gray-100 border-b border-gray-300 text-gray-700 font-semibold text-xs uppercase tracking-wider">
           <p>#</p>
-          <p>Pateint</p>
+          <p>Patient</p>
           <p>Payment</p>
           <p>Age</p>
           <p>Date & Time</p>
@@ -34,40 +43,110 @@ const DoctorAppointments = () => {
           <p>Actions</p>
         </div>
 
-        {
-          appointments.reverse().map((item, index) => (
-            <div className='flex flex-wrap justify-between max-sm:gap-5 max-sm:text-base sm:grid grid-cols-[0.5fr_2fr_1fr_1fr_3fr_1fr_1fr] gap-1 items-center text-gray-500 py-3 px-6 border-b hover:bg-gray-50' key={index}>
-              <p className='max-sm:hidden'>{index + 1}</p>
-              <div className='flex items-center gap-2'>
-                <img className='w-8 rounded-full' src={item.userData.image} alt="" />  <p>{item.userData.name}</p>
-              </div>
-              <div>
-                <p className='text-xs inline border border-primary cursor-pointer px-2 rounded-full'>
-                  {item.payement ? 'Online' : 'CASH'}
-                </p>
-              </div>
-              <p className='max-sm:hidden'>{calculateAge(item.userData.dob)}</p>
-              <p>{slotDateFormat(item.slotDate)}, {item.slotTime}</p>
-              <p>{currency}{item.amount}</p>
-              {
-                item.cancelled
-                  ? <p className='text-red-400 text-xs font-medium'>Cancelled</p>
-                  : item.isCompleted
-                    ? <p className='text-green-500 text-xs font-medium'>Completed</p>
-                    : <div className='flex'>
-                      <img onClick={() => cancelAppointment(item._id)} className='w-10 cursor-pointer' src={assets.cancel_icon} alt="" />
-                      <img onClick={() => completeAppointment(item._id)} className='w-10 cursor-pointer' src={assets.tick_icon} alt="" />
+        {/* Table Body */}
+        <div className="divide-y divide-gray-100">
+          {appointments?.length ? (
+            appointments
+              .slice()
+              .reverse()
+              .map((item, index) => (
+                <div
+                  key={index}
+                  className="flex flex-wrap justify-between items-center max-sm:gap-5 sm:grid grid-cols-[0.5fr_2fr_1fr_1fr_3fr_1fr_1fr] py-5 px-6 hover:bg-gray-100 hover:shadow-sm transition-all duration-200"
+                >
+                  {/* Index */}
+                  <p className="hidden sm:block text-gray-400">{index + 1}</p>
+
+                  {/* Patient Info */}
+                  <div className="flex items-center gap-3">
+                    <img
+                      className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200"
+                      src={item.userData.image}
+                      alt={item.userData.name}
+                    />
+                    <div>
+                      <p className="font-medium text-gray-900 leading-tight">
+                        {item.userData.name}
+                      </p>
+                      <p className="text-xs text-gray-500">{item.userData.email}</p>
                     </div>
-              }
+                  </div>
 
+                  {/* Payment */}
+                  <div>
+                    <span
+                      className={`text-xs font-semibold px-3 py-1 rounded-full border ${item.payement
+                          ? 'border-green-400 text-green-600 bg-green-50'
+                          : 'border-yellow-400 text-yellow-700 bg-yellow-50'
+                        }`}
+                    >
+                      {item.payement ? 'Online' : 'Cash'}
+                    </span>
+                  </div>
+
+                  {/* Age */}
+                  <p className="hidden sm:block text-gray-700">
+                    {calculateAge(item.userData.dob) ?? '-'}
+                  </p>
+
+                  {/* Date & Time */}
+                  <div className="text-gray-700 text-sm leading-tight">
+                    <p className="font-medium text-gray-800">
+                      {slotDateFormat(item.slotDate)}
+                    </p>
+                    <p className="text-gray-500">{item.slotTime}</p>
+                  </div>
+
+                  {/* Fees */}
+                  <p className="font-semibold text-gray-900">
+                    {currency}
+                    {item.amount}
+                  </p>
+
+                  {/* Actions / Status */}
+                  {item.cancelled ? (
+                    <span className="text-red-600 text-xs font-semibold bg-red-50 border border-red-100 px-3 py-1 rounded-full text-center">
+                      Cancelled
+                    </span>
+                  ) : item.isCompleted ? (
+                    <span className="text-green-600 text-xs font-semibold bg-green-50 border border-green-100 px-3 py-1 rounded-full text-center">
+                      Completed
+                    </span>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <img
+                        onClick={() => cancelAppointment(item._id)}
+                        className="w-8 h-8 cursor-pointer hover:scale-110 active:scale-95 transition-transform drop-shadow-sm"
+                        src={assets.cancel_icon}
+                        alt="Cancel"
+                        title="Cancel Appointment"
+                      />
+                      <img
+                        onClick={() => completeAppointment(item._id)}
+                        className="w-8 h-8 cursor-pointer hover:scale-110 active:scale-95 transition-transform drop-shadow-sm"
+                        src={assets.tick_icon}
+                        alt="Complete"
+                        title="Mark as Complete"
+                      />
+                    </div>
+                  )}
+                </div>
+              ))
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+              <img
+                src={assets.empty_icon || assets.list_icon}
+                alt="No Appointments"
+                className="w-20 h-20 opacity-40 mb-4"
+              />
+              <p className="text-sm font-medium">No appointments found</p>
+              <p className="text-xs text-gray-400 mt-1">New bookings will appear here</p>
             </div>
-          ))
-        }
-
+          )}
+        </div>
       </div>
-
     </div>
-  )
-}
+  );
+};
 
-export default DoctorAppointments
+export default DoctorAppointments;

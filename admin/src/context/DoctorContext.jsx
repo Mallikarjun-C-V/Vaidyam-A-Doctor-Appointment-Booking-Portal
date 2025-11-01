@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { createContext } from "react";
+import { useState, createContext } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 
@@ -11,25 +10,25 @@ const DoctorContextProvider = (props) => {
   const [dToken, setDToken] = useState(
     localStorage.getItem("dToken") ? localStorage.getItem("dToken") : ""
   );
-  const [appointments, setappointments] = useState([]);
-  const [dashData, setDashData] = useState(false);
-  const [profileData, setProfileData] = useState(false);
+  const [appointments, setappointments] = useState([]); // ✅ always an array
+  const [dashData, setDashData] = useState(null); // ✅ null instead of false
+  const [profileData, setProfileData] = useState(null);
 
   // ✅ Fetch all doctor appointments
   const getAppointments = async () => {
     try {
-      const { data } = await axios.get(backendUrl + "/api/doctor/appointments", {
+      const { data } = await axios.get(`${backendUrl}/api/doctor/appointments`, {
         headers: { dToken },
       });
 
       if (data.success) {
-        setappointments(data.appointments);
-        console.log(data.appointments);
+        setappointments(data.appointments || []);
+        console.log("Appointments:", data.appointments);
       } else {
         toast.error(data.message);
       }
     } catch (error) {
-      console.log(error);
+      console.error("getAppointments error:", error);
       toast.error(error.message);
     }
   };
@@ -37,18 +36,18 @@ const DoctorContextProvider = (props) => {
   // ✅ Fetch dashboard data
   const getDashdata = async () => {
     try {
-      const { data } = await axios.get(backendUrl + "/api/doctor/dashboard", {
+      const { data } = await axios.get(`${backendUrl}/api/doctor/dashboard`, {
         headers: { dToken },
       });
 
       if (data.success) {
-        setDashData(data.dashData);
+        setDashData(data.dashData || {});
         console.log("Dashboard data:", data.dashData);
       } else {
         toast.error(data.message);
       }
     } catch (error) {
-      console.log(error);
+      console.error("getDashdata error:", error);
       toast.error(error.message);
     }
   };
@@ -56,10 +55,10 @@ const DoctorContextProvider = (props) => {
   // ✅ Mark appointment as completed (instant update + backend sync)
   const completeAppointment = async (appointmentId) => {
     try {
-      // 🔹 Optimistic UI update
+      // 🔹 Optimistic UI update (safe)
       setDashData((prev) => ({
         ...prev,
-        latestAppointments: prev.latestAppointments.map((a) =>
+        latestAppointments: (prev?.latestAppointments ?? []).map((a) =>
           a._id === appointmentId
             ? { ...a, isCompleted: true, cancelled: false }
             : a
@@ -68,21 +67,19 @@ const DoctorContextProvider = (props) => {
 
       // 🔹 Send to backend
       const { data } = await axios.post(
-        backendUrl + "/api/doctor/complete-appointment",
+        `${backendUrl}/api/doctor/complete-appointment`,
         { appointmentId },
         { headers: { dToken } }
       );
 
       if (data.success) {
         toast.success(data.message);
-        // 🔹 Re-fetch latest data for consistency
-        getAppointments();
-        getDashdata();
+        await Promise.all([getAppointments(), getDashdata()]);
       } else {
         toast.error(data.message);
       }
     } catch (error) {
-      console.log(error);
+      console.error("completeAppointment error:", error);
       toast.error(error.message);
     }
   };
@@ -90,10 +87,10 @@ const DoctorContextProvider = (props) => {
   // ✅ Cancel appointment (instant update + backend sync)
   const cancelAppointment = async (appointmentId) => {
     try {
-      // 🔹 Optimistic UI update
+      // 🔹 Optimistic UI update (safe)
       setDashData((prev) => ({
         ...prev,
-        latestAppointments: prev.latestAppointments.map((a) =>
+        latestAppointments: (prev?.latestAppointments ?? []).map((a) =>
           a._id === appointmentId
             ? { ...a, cancelled: true, isCompleted: false }
             : a
@@ -102,21 +99,19 @@ const DoctorContextProvider = (props) => {
 
       // 🔹 Send to backend
       const { data } = await axios.post(
-        backendUrl + "/api/doctor/cancel-appointment",
+        `${backendUrl}/api/doctor/cancel-appointment`,
         { appointmentId },
         { headers: { dToken } }
       );
 
       if (data.success) {
         toast.success(data.message);
-        // 🔹 Re-fetch latest data for consistency
-        getAppointments();
-        getDashdata();
+        await Promise.all([getAppointments(), getDashdata()]);
       } else {
         toast.error(data.message);
       }
     } catch (error) {
-      console.log(error);
+      console.error("cancelAppointment error:", error);
       toast.error(error.message);
     }
   };
@@ -124,18 +119,18 @@ const DoctorContextProvider = (props) => {
   // ✅ Get doctor profile
   const getProfileData = async () => {
     try {
-      const { data } = await axios.get(backendUrl + "/api/doctor/profile", {
+      const { data } = await axios.get(`${backendUrl}/api/doctor/profile`, {
         headers: { dToken },
       });
 
       if (data.success) {
-        setProfileData(data.profileData);
+        setProfileData(data.profileData || {});
         console.log("Profile data:", data.profileData);
       } else {
         toast.error(data.message);
       }
     } catch (error) {
-      console.log(error);
+      console.error("getProfileData error:", error);
       toast.error(error.message);
     }
   };

@@ -48,7 +48,7 @@ const DoctorProfile = () => {
         {/* Main Profile Card */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           {/* Header Section */}
-          <div className="bg-gradient-to-r from-blue-300 to-indigo-300 rounded-2xl px-8 py-8">
+          <div className="bg-gradient-to-r from-blue-300 to-indigo-200 rounded-2xl px-8 py-8">
             <div className="flex flex-col md:flex-row gap-8 items-center md:items-end">
               {/* Profile Image */}
               <div className="relative flex-shrink-0">
