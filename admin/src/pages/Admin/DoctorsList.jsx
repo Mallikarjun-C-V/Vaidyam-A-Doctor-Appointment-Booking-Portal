@@ -1,15 +1,26 @@
-import React, { useContext, useEffect } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { AdminContext } from '../../context/AdminContext'
+import Loader from '../../components/Loader' // <-- Import your loader component
 
 const DoctorsList = () => {
-
   const { doctors, aToken, getAllDoctors, changeAvailability } = useContext(AdminContext)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (aToken) {
-      getAllDoctors()
+    const fetchDoctors = async () => {
+      if (aToken) {
+        setLoading(true)
+        await getAllDoctors()
+        setLoading(false)
+      }
     }
-  },[aToken])
+    fetchDoctors()
+  }, [aToken])
+
+  // ✅ Show loader while data is being fetched
+  if (loading) {
+    return <Loader message="Doctors list is loading" />
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6 md:p-10 w-full">
@@ -28,71 +39,66 @@ const DoctorsList = () => {
       {/* Doctors Grid */}
       <div className="max-w-7xl mx-auto w-full">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
-          {
-            doctors.map((item, index) => (
-              <div 
-                key={index}
-                className="bg-white rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 ease-in-out overflow-hidden group w-full max-w-sm"
-              >
-                {/* Image Container */}
-                <div className="relative overflow-hidden h-64 bg-gradient-to-br from-blue-100 to-indigo-100">
-                  <img 
-                    src={item.image} 
-                    alt={item.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-in-out"
-                  />
-                  {/* Overlay on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  
-                  {/* Available Badge */}
-                  <div className="absolute top-4 right-4">
-                    <div className={`px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg transition-all duration-300 ${
-                      item.available 
-                        ? 'bg-green-500 text-white' 
-                        : 'bg-gray-500 text-white'
-                    }`}>
-                      {item.available ? '● Available' : '● Unavailable'}
-                    </div>
+          {doctors.map((item, index) => (
+            <div 
+              key={index}
+              className="bg-white rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 ease-in-out overflow-hidden group w-full max-w-sm"
+            >
+              {/* Image Container */}
+              <div className="relative overflow-hidden h-64 bg-gradient-to-br from-blue-100 to-indigo-100">
+                <img 
+                  src={item.image} 
+                  alt={item.name}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-in-out"
+                />
+                {/* Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                {/* Availability Badge */}
+                <div className="absolute top-4 right-4">
+                  <div className={`px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg ${
+                    item.available 
+                      ? 'bg-green-500 text-white' 
+                      : 'bg-gray-500 text-white'
+                  }`}>
+                    {item.available ? '● Available' : '● Unavailable'}
                   </div>
                 </div>
-
-                {/* Content Container */}
-                <div className="p-6">
-                  {/* Doctor Name */}
-                  <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors duration-300 text-center">
-                    {item.name}
-                  </h3>
-                  
-                  {/* Specialty Badge */}
-                  <div className="mb-4 text-center">
-                    <span className="inline-block bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 px-4 py-1.5 rounded-full text-sm font-medium border border-blue-200">
-                      {item.speciality}
-                    </span>
-                  </div>
-
-                  {/* Availability Toggle */}
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                    <span className="text-sm font-medium text-gray-600">
-                      Availability
-                    </span>
-                    <label className="relative inline-flex items-center cursor-pointer group/toggle">
-                      <input 
-                        onChange={()=>changeAvailability(item._id)}
-                        type="checkbox" 
-                        checked={item.available}
-                        readOnly
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 shadow-inner"></div>
-                    </label>
-                  </div>
-                </div>
-
-                {/* Bottom Accent Line */}
-                <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-in-out"></div>
               </div>
-            ))
-          }
+
+              {/* Content Container */}
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors duration-300 text-center">
+                  {item.name}
+                </h3>
+                
+                <div className="mb-4 text-center">
+                  <span className="inline-block bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 px-4 py-1.5 rounded-full text-sm font-medium border border-blue-200">
+                    {item.speciality}
+                  </span>
+                </div>
+
+                {/* Availability Toggle */}
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                  <span className="text-sm font-medium text-gray-600">
+                    Availability
+                  </span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      onChange={() => changeAvailability(item._id)}
+                      type="checkbox" 
+                      checked={item.available}
+                      readOnly
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 shadow-inner"></div>
+                  </label>
+                </div>
+              </div>
+
+              <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-in-out"></div>
+            </div>
+          ))}
         </div>
 
         {/* Empty State */}
