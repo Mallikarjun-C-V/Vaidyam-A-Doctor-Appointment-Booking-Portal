@@ -3,11 +3,13 @@ import { DoctorContext } from '../../context/DoctorContext';
 import { AppContext } from '../../context/AppContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import Loader from '../../components/Loader'; // ✅ make sure the path matches your folder
 
 const DoctorProfile = () => {
   const { dToken, profileData, setProfileData, getProfileData, backendUrl } = useContext(DoctorContext);
   const { currency } = useContext(AppContext);
   const [isEdit, setIsEdit] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const updateProfile = async () => {
     try {
@@ -37,10 +39,21 @@ const DoctorProfile = () => {
   };
 
   useEffect(() => {
-    getProfileData();
+    const fetchData = async () => {
+      setLoading(true);
+      await getProfileData();
+      setLoading(false);
+    };
+
+    if (dToken) {
+      fetchData();
+    }
   }, [dToken]);
 
-  if (!profileData) return null;
+  // ✅ Show loader while fetching profile data
+  if (loading || !profileData) {
+    return <Loader message="Profile Loading" />;
+  }
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-10 px-4">
@@ -60,8 +73,9 @@ const DoctorProfile = () => {
                   />
                 </div>
                 <span
-                  className={`absolute bottom-4 right-4 w-5 h-5 rounded-full border-4 border-white shadow-lg ${profileData.available ? 'bg-green-500' : 'bg-gray-400'
-                    }`}
+                  className={`absolute bottom-4 right-4 w-5 h-5 rounded-full border-4 border-white shadow-lg ${
+                    profileData.available ? 'bg-green-500' : 'bg-gray-400'
+                  }`}
                 ></span>
               </div>
 
@@ -101,10 +115,11 @@ const DoctorProfile = () => {
               </div>
 
               <div
-                className={`rounded-xl p-6 border-l-4 transition-all duration-300 ${isEdit
+                className={`rounded-xl p-6 border-l-4 transition-all duration-300 ${
+                  isEdit
                     ? 'bg-white border-blue-400 ring-2 ring-blue-100'
                     : 'bg-gray-50 border-blue-600'
-                  }`}
+                }`}
               >
                 {isEdit ? (
                   <textarea
@@ -121,15 +136,15 @@ const DoctorProfile = () => {
               </div>
             </div>
 
-
             {/* Info Cards Grid */}
             <div className="grid md:grid-cols-3 gap-6 mb-8">
               {/* Consultation Fee */}
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
                 <div className="flex items-center gap-2 mb-3">
                   <div
-                    className={`w-10 h-10 rounded-lg flex items-center justify-center text-white text-2xl font-bold transition-all duration-300 ${isEdit ? 'bg-emerald-700 animate-pulse' : 'bg-green-600'
-                      }`}
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center text-white text-2xl font-bold transition-all duration-300 ${
+                      isEdit ? 'bg-emerald-700 animate-pulse' : 'bg-green-600'
+                    }`}
                   >
                     {currency}
                   </div>
@@ -158,8 +173,9 @@ const DoctorProfile = () => {
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
                 <div className="flex items-center gap-2 mb-3">
                   <div
-                    className={`w-10 h-10 rounded-lg flex items-center justify-center text-white transition-all duration-300 ${isEdit ? 'bg-blue-700 animate-pulse' : 'bg-blue-600'
-                      }`}
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center text-white transition-all duration-300 ${
+                      isEdit ? 'bg-blue-700 animate-pulse' : 'bg-blue-600'
+                    }`}
                   >
                     <svg
                       className="w-5 h-5 text-white"
@@ -196,8 +212,9 @@ const DoctorProfile = () => {
                     <div className="absolute left-1 top-1 w-6 h-6 bg-white rounded-full shadow transition-transform peer-checked:translate-x-6"></div>
                   </div>
                   <span
-                    className={`font-semibold ${profileData.available ? 'text-green-600' : 'text-gray-500'
-                      }`}
+                    className={`font-semibold ${
+                      profileData.available ? 'text-green-600' : 'text-gray-500'
+                    }`}
                   >
                     {profileData.available ? 'Available Now' : 'Not Available'}
                   </span>
@@ -208,8 +225,9 @@ const DoctorProfile = () => {
               <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-200 transition-all duration-300">
                 <div className="flex items-center gap-2 mb-3">
                   <div
-                    className={`w-10 h-10 rounded-lg flex items-center justify-center text-white transition-all duration-300 ${isEdit ? 'bg-pink-600 animate-pulse' : 'bg-purple-600'
-                      }`}
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center text-white transition-all duration-300 ${
+                      isEdit ? 'bg-pink-600 animate-pulse' : 'bg-purple-600'
+                    }`}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -321,7 +339,7 @@ const DoctorProfile = () => {
   );
 };
 
-// ✅ AboutText helper (placed outside DoctorProfile)
+// ✅ AboutText helper
 const AboutText = ({ text }) => {
   const [expanded, setExpanded] = React.useState(false);
   const [isOverflowing, setIsOverflowing] = React.useState(false);

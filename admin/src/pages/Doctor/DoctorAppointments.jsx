@@ -1,7 +1,8 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { DoctorContext } from '../../context/DoctorContext';
 import { AppContext } from '../../context/AppContext';
 import { assets } from '../../assets/assets';
+import Loader from '../../components/Loader'; // 👈 Import your Loader component
 
 const DoctorAppointments = () => {
   const { dToken, appointments, getAppointments, completeAppointment, cancelAppointment } =
@@ -9,11 +10,23 @@ const DoctorAppointments = () => {
 
   const { calculateAge, slotDateFormat, currency } = useContext(AppContext);
 
+  const [loading, setLoading] = useState(false); // 👈 loader state
+
   useEffect(() => {
-    if (dToken) {
-      getAppointments();
-    }
+    const fetchAppointments = async () => {
+      if (dToken) {
+        setLoading(true);
+        await getAppointments();
+        setLoading(false);
+      }
+    };
+    fetchAppointments();
   }, [dToken]);
+
+  // 👇 show loader while fetching
+  if (loading) {
+    return <Loader message="Loading your appointments" />;
+  }
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6 bg-gradient-to-br from-gray-50 via-white to-gray-100 min-h-screen">
@@ -28,7 +41,6 @@ const DoctorAppointments = () => {
           </p>
         </div>
       </div>
-
 
       {/* ===== Table Container ===== */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden backdrop-blur-sm">
@@ -75,10 +87,11 @@ const DoctorAppointments = () => {
                   {/* Payment */}
                   <div>
                     <span
-                      className={`text-xs font-semibold px-3 py-1 rounded-full border ${item.payement
+                      className={`text-xs font-semibold px-3 py-1 rounded-full border ${
+                        item.payement
                           ? 'border-green-400 text-green-600 bg-green-50'
                           : 'border-yellow-400 text-yellow-700 bg-yellow-50'
-                        }`}
+                      }`}
                     >
                       {item.payement ? 'Online' : 'Cash'}
                     </span>

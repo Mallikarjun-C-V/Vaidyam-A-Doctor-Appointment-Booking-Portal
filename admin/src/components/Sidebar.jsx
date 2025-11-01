@@ -51,7 +51,7 @@ const Sidebar = () => {
                                     transition-all duration-200 ease-in-out
                                     ${isActive
                                         ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
-                                        : 'text-gray-700 hover:bg-gray-50 border-l-4 border-transparent'
+                                        : 'text-gray-700 hover:bg-gray-100 border-l-4 border-transparent'
                                     }
                                 `}
                                 to={'/admin-dashboard'}
@@ -67,7 +67,7 @@ const Sidebar = () => {
                                     transition-all duration-200 ease-in-out
                                     ${isActive
                                         ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
-                                        : 'text-gray-700 hover:bg-gray-50 border-l-4 border-transparent'
+                                        : 'text-gray-700 hover:bg-gray-100 border-l-4 border-transparent'
                                     }
                                 `}
                                 to={'/all-appointments'}
@@ -83,7 +83,7 @@ const Sidebar = () => {
                                     transition-all duration-200 ease-in-out
                                     ${isActive
                                         ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
-                                        : 'text-gray-700 hover:bg-gray-50 border-l-4 border-transparent'
+                                        : 'text-gray-700 hover:bg-gray-100 border-l-4 border-transparent'
                                     }
                                 `}
                                 to={'/add-doctors'}
@@ -99,7 +99,7 @@ const Sidebar = () => {
                                     transition-all duration-200 ease-in-out
                                     ${isActive
                                         ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
-                                        : 'text-gray-700 hover:bg-gray-50 border-l-4 border-transparent'
+                                        : 'text-gray-700 hover:bg-gray-100 border-l-4 border-transparent'
                                     }
                                 `}
                                 to={'/doctor-list'}
@@ -115,7 +115,7 @@ const Sidebar = () => {
                                     transition-all duration-200 ease-in-out
                                     ${isActive
                                         ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
-                                        : 'text-gray-700 hover:bg-gray-50 border-l-4 border-transparent'
+                                        : 'text-gray-700 hover:bg-gray-100 border-l-4 border-transparent'
                                     }
                                 `}
                                 to={'/change-doctor-password'}
@@ -149,7 +149,7 @@ const Sidebar = () => {
                                     transition-all duration-200 ease-in-out
                                     ${isActive
                                         ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
-                                        : 'text-gray-700 hover:bg-gray-50 border-l-4 border-transparent'
+                                        : 'text-gray-700 hover:bg-gray-100 border-l-4 border-transparent'
                                     }
                                 `}
                                 to={'/doctor-dashboard'}
@@ -165,7 +165,7 @@ const Sidebar = () => {
                                     transition-all duration-200 ease-in-out
                                     ${isActive
                                         ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
-                                        : 'text-gray-700 hover:bg-gray-50 border-l-4 border-transparent'
+                                        : 'text-gray-700 hover:bg-gray-100 border-l-4 border-transparent'
                                     }
                                 `}
                                 to={'/doctor-appointments'}
@@ -181,7 +181,7 @@ const Sidebar = () => {
                                     transition-all duration-200 ease-in-out
                                     ${isActive
                                         ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
-                                        : 'text-gray-700 hover:bg-gray-50 border-l-4 border-transparent'
+                                        : 'text-gray-700 hover:bg-gray-100 border-l-4 border-transparent'
                                     }
                                 `}
                                 to={'/doctor-profile'}
