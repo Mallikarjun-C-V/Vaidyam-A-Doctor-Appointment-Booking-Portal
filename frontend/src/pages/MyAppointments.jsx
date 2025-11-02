@@ -262,7 +262,7 @@ const MyAppointments = () => {
 
                 {!item.cancelled && !item.isCompleted && !isAppointmentExpired(item) && (
                   <motion.button
-                    onClick={() => navigate(`/chat/${item.docId}`)} // 🔹 Update route as needed
+                    onClick={() => navigate(``)} // 🔹 Update route as needed
                     className="relative text-sm font-semibold text-center w-full md:min-w-48 px-5 py-2.5
                bg-gradient-to-r from-fuchsia-500 via-purple-600 to-indigo-600
                text-white rounded-lg shadow-lg hover:shadow-2xl
