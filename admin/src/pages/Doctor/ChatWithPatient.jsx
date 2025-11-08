@@ -4,13 +4,13 @@ import { DoctorContext } from '../../context/DoctorContext';
 import { io } from 'socket.io-client';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Send, 
-  Search, 
-  Clock, 
-  User, 
-  AlertCircle, 
-  RefreshCw, 
+import {
+  Send,
+  Search,
+  Clock,
+  User,
+  AlertCircle,
+  RefreshCw,
   MessageCircle,
   CheckCheck,
   Check,
@@ -66,7 +66,6 @@ const ChatWithPatient = () => {
   // Load doctor's chat list
   const loadChatList = async () => {
     try {
-      console.log('🔄 Loading chat list for doctor...');
       setError('');
 
       const doctorProfile = await ensureProfileData();
@@ -75,15 +74,11 @@ const ChatWithPatient = () => {
         throw new Error('Doctor profile not available');
       }
 
-      console.log('👨‍⚕️ Doctor ID:', doctorProfile._id);
-
       const { data } = await axios.post(
         `${backendUrl}/api/chat/doctor/chat-list`,
         { docId: doctorProfile._id },
         { headers: { dtoken: dToken } }
       );
-
-      console.log('📋 Chat list API response:', data);
 
       if (data.success) {
         setChatList(data.chatList || []);
@@ -108,7 +103,6 @@ const ChatWithPatient = () => {
   // Load chat history with specific patient
   const loadChatHistory = async (patientId) => {
     try {
-      console.log('🔄 Loading chat history for patient:', patientId);
 
       if (!profileData?._id || !patientId) {
         console.error('Missing required data for loading chat history');
@@ -144,11 +138,11 @@ const ChatWithPatient = () => {
             );
             setMessages(sortedMessages);
           } else {
-            console.warn('No chat history found:', chatData.message);
+            console.warn('No chat history found:');
             setMessages([]);
           }
         } else {
-          console.warn('No appointments found for patient:', patientId);
+          console.warn('No appointments found for patient:');
           setMessages([]);
         }
       }
@@ -181,7 +175,6 @@ const ChatWithPatient = () => {
 
   // Initialize socket connection
   const initializeSocket = () => {
-    console.log('🔌 Initializing socket connection...');
 
     try {
       const socketConnection = io(backendUrl, {
@@ -192,7 +185,6 @@ const ChatWithPatient = () => {
       setSocket(socketConnection);
 
       socketConnection.on('connect', () => {
-        console.log('✅ Doctor Socket connected:', socketConnection.id);
         setConnectionStatus('connected');
       });
 
@@ -207,7 +199,6 @@ const ChatWithPatient = () => {
       });
 
       socketConnection.on('receive_message', (message) => {
-        console.log('📨 New message received:', message);
 
         if (selectedPatient && message.patientId === selectedPatient.patientId) {
           setMessages(prev => {
@@ -276,7 +267,6 @@ const ChatWithPatient = () => {
 
     try {
       setSending(true);
-      console.log('📤 Sending message...');
 
       const { data: appointmentsData } = await axios.get(
         `${backendUrl}/api/doctor/appointments`,
@@ -333,7 +323,6 @@ const ChatWithPatient = () => {
 
   // Handle patient selection
   const handlePatientSelect = async (patient) => {
-    console.log('👤 Patient selected:', patient);
     setSelectedPatient(patient);
     setMessages([]);
     await loadChatHistory(patient.patientId);
@@ -429,7 +418,6 @@ const ChatWithPatient = () => {
   };
 
   useEffect(() => {
-    console.log('🏥 Doctor Chat Component Mounted');
 
     if (dToken) {
       const initializeChat = async () => {
@@ -523,23 +511,22 @@ const ChatWithPatient = () => {
 
   return (
     <div className="h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex overflow-hidden">
-      
+
       {/* Connection Status Indicator */}
       <AnimatePresence>
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`fixed top-6 right-6 z-50 px-4 py-2 rounded-full text-xs font-semibold shadow-lg backdrop-blur-sm ${
-            connectionStatus === 'connected' 
-              ? 'bg-emerald-500/90 text-white' 
-              : connectionStatus === 'error' 
-              ? 'bg-rose-500/90 text-white' 
-              : 'bg-amber-500/90 text-white'
-          }`}
+          className={`fixed top-6 right-6 z-50 px-4 py-2 rounded-full text-xs font-semibold shadow-lg backdrop-blur-sm ${connectionStatus === 'connected'
+              ? 'bg-emerald-500/90 text-white'
+              : connectionStatus === 'error'
+                ? 'bg-rose-500/90 text-white'
+                : 'bg-amber-500/90 text-white'
+            }`}
         >
           <div className="flex items-center gap-2">
-            <Circle 
-              className={`w-2 h-2 ${connectionStatus === 'connected' ? 'fill-white' : 'fill-white/70'} ${connectionStatus === 'connected' ? 'animate-pulse' : ''}`} 
+            <Circle
+              className={`w-2 h-2 ${connectionStatus === 'connected' ? 'fill-white' : 'fill-white/70'} ${connectionStatus === 'connected' ? 'animate-pulse' : ''}`}
             />
             {connectionStatus === 'connected' ? 'Connected' : connectionStatus === 'error' ? 'Connection Error' : 'Connecting...'}
           </div>
@@ -548,7 +535,7 @@ const ChatWithPatient = () => {
 
       {/* Sidebar - Patients List - REDUCED WIDTH */}
       <div className="w-80 bg-white/80 backdrop-blur-xl border-r border-gray-200/50 flex flex-col shadow-xl">
-        
+
         {/* Header */}
         <div className="p-6 border-b border-gray-200/50 bg-gradient-to-r from-blue-600 to-indigo-600">
           <div className="flex items-center justify-between mb-4">
@@ -595,11 +582,10 @@ const ChatWithPatient = () => {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
                   onClick={() => handlePatientSelect(patient)}
-                  className={`p-4 mb-2 rounded-2xl cursor-pointer transition-all duration-200 ${
-                    selectedPatient?.patientId === patient.patientId
+                  className={`p-4 mb-2 rounded-2xl cursor-pointer transition-all duration-200 ${selectedPatient?.patientId === patient.patientId
                       ? 'bg-gradient-to-r from-blue-500 to-indigo-500 shadow-lg scale-[1.02]'
                       : 'bg-white hover:bg-gray-50 hover:shadow-md'
-                  }`}
+                    }`}
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
                 >
@@ -615,21 +601,18 @@ const ChatWithPatient = () => {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start mb-1">
-                        <h3 className={`font-bold truncate text-base ${
-                          selectedPatient?.patientId === patient.patientId ? 'text-white' : 'text-gray-900'
-                        }`}>
+                        <h3 className={`font-bold truncate text-base ${selectedPatient?.patientId === patient.patientId ? 'text-white' : 'text-gray-900'
+                          }`}>
                           {patient.patientName || 'Unknown Patient'}
                         </h3>
-                        <span className={`text-xs whitespace-nowrap ml-2 font-medium ${
-                          selectedPatient?.patientId === patient.patientId ? 'text-blue-100' : 'text-gray-500'
-                        }`}>
+                        <span className={`text-xs whitespace-nowrap ml-2 font-medium ${selectedPatient?.patientId === patient.patientId ? 'text-blue-100' : 'text-gray-500'
+                          }`}>
                           {formatMessageDate(patient.lastMessageTime)}
                         </span>
                       </div>
 
-                      <p className={`text-sm truncate ${
-                        selectedPatient?.patientId === patient.patientId ? 'text-blue-100' : 'text-gray-600'
-                      }`}>
+                      <p className={`text-sm truncate ${selectedPatient?.patientId === patient.patientId ? 'text-blue-100' : 'text-gray-600'
+                        }`}>
                         {patient.lastMessage || 'No messages yet'}
                       </p>
                     </div>
@@ -648,7 +631,7 @@ const ChatWithPatient = () => {
       </div>
 
       {/* Main Chat Area - WIDER NOW */}
-      <div className="flex-1 flex flex-col bg-white/50 backdrop-blur-sm">
+      <div className="flex-1 flex flex-col w-full md:w-[700px] lg:w-[900px] xl:w-[1100px] 2xl:w-[1300px] bg-white/50 backdrop-blur-sm transition-all duration-300">
         {selectedPatient ? (
           <>
             {/* Chat Header */}
@@ -689,7 +672,7 @@ const ChatWithPatient = () => {
             </div>
 
             {/* Messages Container - CENTERED & WIDER */}
-            <div 
+            <div
               className="flex-1 overflow-y-auto custom-scrollbar flex justify-center"
               style={{
                 backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
@@ -746,22 +729,19 @@ const ChatWithPatient = () => {
 
                                 {/* Message Bubble */}
                                 <div
-                                  className={`max-w-lg px-5 py-3 rounded-2xl shadow-md ${
-                                    isCurrentUserSender
+                                  className={`max-w-lg px-5 py-3 rounded-2xl shadow-md ${isCurrentUserSender
                                       ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-br-sm'
                                       : 'bg-white text-gray-900 rounded-bl-sm border border-gray-200/50'
-                                  } ${isTempMessage ? 'opacity-70' : ''}`}
+                                    } ${isTempMessage ? 'opacity-70' : ''}`}
                                 >
                                   <p className="text-sm leading-relaxed break-words">{message.message}</p>
                                   <div
-                                    className={`flex items-center gap-1 mt-1 ${
-                                      isCurrentUserSender ? 'justify-end' : 'justify-start'
-                                    }`}
+                                    className={`flex items-center gap-1 mt-1 ${isCurrentUserSender ? 'justify-end' : 'justify-start'
+                                      }`}
                                   >
                                     <span
-                                      className={`text-xs ${
-                                        isCurrentUserSender ? 'text-blue-100' : 'text-gray-500'
-                                      }`}
+                                      className={`text-xs ${isCurrentUserSender ? 'text-blue-100' : 'text-gray-500'
+                                        }`}
                                     >
                                       {formatTime(message.timestamp)}
                                     </span>
