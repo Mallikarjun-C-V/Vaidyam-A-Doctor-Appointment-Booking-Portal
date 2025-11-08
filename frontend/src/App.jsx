@@ -14,6 +14,8 @@ import CursorTrail from './CursorTrail';
 import { ToastContainer, toast } from 'react-toastify';
 import Notfound from './pages/Notfound'
 import Jobs from './pages/Jobs'
+import ChatWithDoctor from './pages/ChatWithDoctor';
+
 
 
 const App = () => {
@@ -34,6 +36,7 @@ const App = () => {
         <Route path='/my-appointments' element={<MyAppointments/>} />
         <Route path='/appointment/:docId' element={<Appointment/>} />
         <Route path='/jobs' element={<Jobs/>} />
+        <Route path='/chat/:appointmentId' element={<ChatWithDoctor/>} />
         <Route path='*' element={<Notfound/>}/>
       </Routes>
     <Footer/>
