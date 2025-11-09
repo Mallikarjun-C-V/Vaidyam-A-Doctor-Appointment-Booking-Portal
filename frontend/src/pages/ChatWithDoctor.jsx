@@ -3,8 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
 import { io } from 'socket.io-client';
 import axios from 'axios';
-import { motion } from 'framer-motion';
-import { Send, ArrowLeft, Clock, RefreshCw, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Send, ArrowLeft, Clock, RefreshCw, AlertCircle, CheckCircle, Circle } from 'lucide-react';
 import Loader from '../components/Loader';
 
 const ChatWithDoctor = () => {
@@ -264,148 +264,228 @@ const ChatWithDoctor = () => {
     };
   }, [token, userData, appointmentId]);
 
+  const getSafeImageUrl = (url, name = 'User') => {
+    if (!url || !url.startsWith('http')) {
+      return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0EA5E9&color=fff&bold=true`;
+    }
+    return url;
+  };
+
   if (loading) {
-    return <Loader message="Loading chat..." />;
+    return <Loader message="Loading your consultation..." />;
   }
 
   if (!doctorInfo || !appointmentData) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center max-w-md mx-auto p-6">
-          <AlertCircle className="mx-auto mb-4 text-red-500" size={64} />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Chat Not Available</h2>
-          <p className="text-gray-600 mb-6">{error || 'Chat not found'}</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-cyan-50">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center max-w-md mx-auto p-8 bg-white rounded-2xl shadow-xl"
+        >
+          <div className="bg-red-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertCircle className="text-red-600" size={40} />
+          </div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-3">Chat Unavailable</h2>
+          <p className="text-gray-600 mb-8 leading-relaxed">{error || 'This consultation session could not be found'}</p>
           <button
             onClick={() => navigate('/my-appointments')}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-8 py-3 rounded-xl hover:from-blue-700 hover:to-cyan-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
           >
             <ArrowLeft className="inline mr-2" size={18} />
             Back to Appointments
           </button>
-        </div>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className={`fixed top-4 right-4 z-50 px-4 py-2 rounded-full text-xs font-medium shadow-lg ${connectionStatus === 'connected'
-          ? 'bg-green-100 text-green-800'
-          : connectionStatus === 'error'
-            ? 'bg-red-100 text-red-800'
-            : 'bg-yellow-100 text-yellow-800'
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50">
+      {/* Connection Status Badge */}
+      <motion.div 
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="fixed top-6 right-6 z-50"
+      >
+        <div className={`px-4 py-2 rounded-full text-xs font-semibold shadow-lg backdrop-blur-sm flex items-center gap-2 ${
+          connectionStatus === 'connected'
+            ? 'bg-emerald-500/90 text-white'
+            : connectionStatus === 'error'
+              ? 'bg-red-500/90 text-white'
+              : 'bg-amber-500/90 text-white'
         }`}>
-        {connectionStatus === 'connected'
-          ? '🟢 Connected'
-          : connectionStatus === 'error'
-            ? '🔴 Connection Error'
-            : '🟡 Connecting...'}
-      </div>
+          <Circle 
+            size={8} 
+            className={connectionStatus === 'connected' ? 'fill-white animate-pulse' : 'fill-white/70'} 
+          />
+          {connectionStatus === 'connected'
+            ? 'Connected'
+            : connectionStatus === 'error'
+              ? 'Connection Error'
+              : 'Connecting...'}
+        </div>
+      </motion.div>
 
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-40 shadow-sm">
+        <div className="max-w-5xl mx-auto px-6 py-5">
           <div className="flex items-center gap-4">
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/my-appointments')}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2.5 hover:bg-gray-100 rounded-xl transition-colors group"
               title="Back to appointments"
             >
-              <ArrowLeft size={20} />
-            </button>
+              <ArrowLeft size={22} className="text-gray-700 group-hover:text-blue-600 transition-colors" />
+            </motion.button>
 
-            <img
-              src={doctorInfo.image}
-              alt={doctorInfo.name}
-              className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
-            />
+            <div className="relative">
+              <img
+                src={getSafeImageUrl(doctorInfo.image, doctorInfo.name)}
+                alt={doctorInfo.name}
+                className="w-14 h-14 rounded-2xl object-cover border-3 border-white shadow-lg ring-2 ring-blue-100"
+              />
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white"></div>
+            </div>
 
             <div className="flex-1">
-              <h1 className="text-xl font-semibold text-gray-900">
+              <h1 className="text-xl font-bold text-gray-900 mb-0.5">
                 Dr. {doctorInfo.name}
               </h1>
-              <p className="text-sm text-gray-500">{doctorInfo.speciality}</p>
+              <p className="text-sm text-blue-600 font-medium">{doctorInfo.speciality}</p>
             </div>
 
-            <div className="text-right">
-              <p className="text-xs text-gray-500">Appointment</p>
-              <p className="text-sm font-medium text-gray-900">
-                {appointmentData.slotDate.split('_').join('/')}
+            <div className="text-right bg-gradient-to-br from-blue-50 to-cyan-50 px-4 py-3 rounded-xl border border-blue-100">
+              <p className="text-xs text-gray-600 mb-1 font-medium">Appointment</p>
+              <p className="text-sm font-bold text-gray-900">
+                {appointmentData.slotDate.split('_').join(' ')}
               </p>
-              <p className="text-xs text-gray-600">{appointmentData.slotTime}</p>
+              <p className="text-xs text-blue-600 font-semibold mt-0.5">{appointmentData.slotTime}</p>
             </div>
-          </div>
 
-          <div className="flex justify-end mt-3">
-            <button
+            {/* Reload Button */}
+          <div className="flex justify-end mt-4">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={reloadMessages}
               disabled={loading}
-              className="flex items-center gap-2 text-xs bg-blue-100 hover:bg-blue-200 px-4 py-2 rounded-lg text-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              className="flex items-center gap-2 text-xs bg-white hover:bg-gray-50 px-4 py-2.5 rounded-xl text-gray-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium border border-gray-200 shadow-sm"
             >
               <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-              {loading ? 'Reloading...' : 'Reload Messages'}
-            </button>
+              {loading ? 'Refreshing...' : 'Refresh Chat'}
+            </motion.button>
           </div>
+          </div>
+
+          
         </div>
       </div>
 
-      {error && (
-        <div className="max-w-4xl mx-auto px-4 py-3">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-            <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-red-800">Error</p>
-              <p className="text-sm text-red-700">{error}</p>
+      {/* Error Alert */}
+      <AnimatePresence>
+        {error && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="max-w-5xl mx-auto px-6 py-4"
+          >
+            <div className="bg-red-50 border-l-4 border-red-500 rounded-xl p-4 flex items-start gap-3 shadow-sm">
+              <div className="bg-red-100 p-2 rounded-lg">
+                <AlertCircle className="text-red-600" size={20} />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-red-900 mb-1">Error occurred</p>
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+              <button
+                onClick={() => setError('')}
+                className="text-red-400 hover:text-red-600 font-bold text-lg leading-none"
+              >
+                ✕
+              </button>
             </div>
-            <button
-              onClick={() => setError('')}
-              className="text-red-500 hover:text-red-700 font-bold"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <div className="bg-white rounded-lg shadow-lg border border-gray-200 h-[calc(100vh-280px)] flex flex-col">
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Chat Container */}
+      <div className="max-w-5xl mx-auto px-6 py-6">
+        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 h-[calc(100vh-300px)] flex flex-col overflow-hidden">
+          
+          {/* Messages Area */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                <Clock size={56} className="mb-4 opacity-30" />
-                <p className="text-lg font-medium">No messages yet</p>
-                <p className="text-sm text-gray-400">Start a conversation with your doctor</p>
+              <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-8 rounded-full mb-6">
+                  <Clock size={64} className="text-blue-300" />
+                </div>
+                <p className="text-xl font-semibold text-gray-600 mb-2">No messages yet</p>
+                <p className="text-sm text-gray-400">Start your consultation with Dr. {doctorInfo.name}</p>
               </div>
             ) : (
               messages.map((message, index) => {
                 const isTemp = message._id?.startsWith('temp-');
-                const isPatient = message.senderType === 'patient';
+                const isPatientSender = message.senderType === 'patient';
+                const avatarUrl = isPatientSender 
+                  ? getSafeImageUrl(userData.image, userData.name) 
+                  : getSafeImageUrl(doctorInfo.image, doctorInfo.name);
+                const avatarAlt = isPatientSender ? userData.name : doctorInfo.name;
 
                 return (
                   <motion.div
                     key={message._id || `msg-${index}`}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className={`flex ${isPatient ? 'justify-end' : 'justify-start'}`}
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className={`flex items-end gap-3 ${
+                      isPatientSender ? 'flex-row-reverse' : 'flex-row'
+                    }`}
                   >
-                    <div className={`flex items-end gap-2 max-w-[70%] ${isPatient ? 'flex-row-reverse' : 'flex-row'}`}>
-                      <div className={`text-2xl flex-shrink-0 ${isPatient ? 'order-1' : ''}`}>
-                        {isPatient ? '👤' : '👨‍⚕️'}
-                      </div>
+                    {/* Avatar */}
+                    <div className="flex-shrink-0">
+                      <img
+                        src={avatarUrl}
+                        alt={avatarAlt}
+                        className={`w-10 h-10 rounded-xl object-cover shadow-md ring-2 ${
+                          isPatientSender ? 'ring-blue-100' : 'ring-emerald-100'
+                        }`}
+                      />
+                    </div>
 
+                    {/* Message Bubble */}
+                    <div className={`max-w-[70%] ${isPatientSender ? 'items-end' : 'items-start'} flex flex-col`}>
                       <div
-                        className={`px-4 py-2 rounded-2xl ${isPatient
-                            ? 'bg-blue-600 text-white rounded-br-none'
-                            : 'bg-gray-200 text-gray-900 rounded-bl-none'
-                          } ${isTemp ? 'opacity-60' : ''}`}
+                        className={`px-5 py-3 rounded-2xl shadow-md ${
+                          isPatientSender
+                            ? 'bg-gradient-to-br from-blue-600 to-blue-500 text-white rounded-br-md'
+                            : 'bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 rounded-bl-md border border-gray-200'
+                        } ${isTemp ? 'opacity-60' : ''}`}
                       >
-                        <p className="text-sm whitespace-pre-wrap break-words">
+                        {!isPatientSender && (
+                          <p className="text-xs font-semibold text-blue-600 mb-1.5">Dr. {doctorInfo.name}</p>
+                        )}
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
                           {message.message}
                         </p>
-                        <p className={`text-xs mt-1 ${isPatient ? 'text-blue-100' : 'text-gray-500'}`}>
-                          {formatTime(message.timestamp)}
-                          {isTemp && ' ⏳'}
-                        </p>
+                        <div className="flex items-center gap-1.5 justify-end mt-2">
+                          <p
+                            className={`text-xs ${
+                              isPatientSender ? 'text-blue-100' : 'text-gray-500'
+                            }`}
+                          >
+                            {formatTime(message.timestamp)}
+                          </p>
+                          {isTemp && (
+                            <Clock size={12} className={isPatientSender ? 'text-blue-200' : 'text-gray-400'} />
+                          )}
+                          {!isTemp && isPatientSender && (
+                            <CheckCircle size={12} className="text-blue-200" />
+                          )}
+                        </div>
                       </div>
                     </div>
                   </motion.div>
@@ -415,50 +495,82 @@ const ChatWithDoctor = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="border-t border-gray-200 p-4 bg-gray-50">
+          {/* Input Area */}
+          <div className="border-t border-gray-100 p-5 bg-gradient-to-br from-gray-50 to-white">
             <div className="flex gap-3 items-end">
-              <textarea
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyDown={handleKeyPress}
-                placeholder="Type your message..."
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                disabled={sending || connectionStatus !== 'connected'}
-                rows={1}
-                style={{ minHeight: '48px', maxHeight: '120px' }}
-              />
-              <button
+              <div className="flex-1 relative">
+                <textarea
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  placeholder="Type your message to the doctor..."
+                  className="w-full px-5 py-3.5 pr-12 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white shadow-sm transition-all placeholder:text-gray-400"
+                  disabled={sending || connectionStatus !== 'connected'}
+                  rows={1}
+                  style={{ minHeight: '52px', maxHeight: '120px' }}
+                />
+              </div>
+              
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={sendMessage}
                 disabled={!newMessage.trim() || sending || connectionStatus !== 'connected'}
-                className="bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex-shrink-0 shadow-lg"
+                className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white p-4 rounded-2xl hover:from-blue-700 hover:to-cyan-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl disabled:shadow-none flex-shrink-0"
                 title="Send message"
               >
                 {sending ? (
-                  <RefreshCw size={20} className="animate-spin" />
+                  <RefreshCw size={22} className="animate-spin" />
                 ) : (
-                  <Send size={20} />
+                  <Send size={22} />
                 )}
-              </button>
+              </motion.button>
             </div>
 
+            {/* Status Messages */}
             {connectionStatus !== 'connected' && (
-              <p className="text-xs text-red-500 mt-2 text-center font-medium">
-                ⚠️ Cannot send messages - {connectionStatus === 'error' ? 'connection error' : 'connecting...'}
-              </p>
+              <motion.p 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-xs text-red-500 mt-3 text-center font-medium flex items-center justify-center gap-2"
+              >
+                <AlertCircle size={14} />
+                Cannot send messages - {connectionStatus === 'error' ? 'connection error' : 'connecting...'}
+              </motion.p>
             )}
             {sending && (
-              <p className="text-xs text-blue-600 mt-2 text-center">
-                Sending message...
-              </p>
+              <motion.p 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-xs text-blue-600 mt-3 text-center font-medium"
+              >
+                Sending your message...
+              </motion.p>
             )}
           </div>
         </div>
 
-        <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-800 text-center">
-            💡 This chat is private and secure. Your doctor will respond during their working hours.
-          </p>
-        </div>
+        {/* Info Banner */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mt-6 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-100 rounded-2xl p-5 shadow-sm"
+        >
+          <div className="flex items-start gap-4">
+            <div className="bg-blue-100 p-3 rounded-xl">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-blue-900 mb-1">Secure & Private Consultation</p>
+              <p className="text-sm text-blue-700">
+                This chat is encrypted. {doctorInfo.name} will respond during working hours.
+              </p>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
