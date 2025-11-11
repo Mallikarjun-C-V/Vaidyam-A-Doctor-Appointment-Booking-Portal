@@ -22,6 +22,40 @@ import {
 } from 'lucide-react';
 import Loader from '../../components/Loader';
 
+// ✅ Helper function to check if appointment is expired
+const isAppointmentExpired = (appointment) => {
+  if (!appointment?.slotDate || !appointment?.slotTime) return false;
+  
+  try {
+    const [day, month, year] = appointment.slotDate.split('_');
+    const appointmentStart = new Date(`${month} ${day}, ${year} ${appointment.slotTime}`);
+    
+    // Add 30 minutes to represent session end time
+    const appointmentEnd = new Date(appointmentStart.getTime() + 30 * 60000);
+    
+    const now = new Date();
+    return now > appointmentEnd;
+  } catch (err) {
+    console.error("Error parsing appointment date:", err);
+    return false;
+  }
+};
+
+// ✅ Helper function to get appointment end time
+const getAppointmentEndTime = (appointment) => {
+  if (!appointment?.slotDate || !appointment?.slotTime) return null;
+  
+  try {
+    const [day, month, year] = appointment.slotDate.split('_');
+    const appointmentStart = new Date(`${month} ${day}, ${year} ${appointment.slotTime}`);
+    const appointmentEnd = new Date(appointmentStart.getTime() + 30 * 60000);
+    return appointmentEnd;
+  } catch (err) {
+    console.error("Error getting appointment end time:", err);
+    return null;
+  }
+};
+
 const ChatWithPatient = () => {
   const { backendUrl, dToken, profileData, getProfileData } = useContext(DoctorContext);
   const navigate = useNavigate();
@@ -36,9 +70,12 @@ const ChatWithPatient = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
   const [error, setError] = useState('');
-  const [retryCount, setRetryCount] = useState(0);
+  const [appointmentInfo, setAppointmentInfo] = useState(null);
 
   const messagesEndRef = useRef(null);
+  const socketRef = useRef(null);
+  const loadingTimeoutRef = useRef(null);
+  const isInitializedRef = useRef(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -48,32 +85,21 @@ const ChatWithPatient = () => {
     scrollToBottom();
   }, [messages]);
 
-  const ensureProfileData = async () => {
-    if (!profileData && dToken) {
-      try {
-        await getProfileData();
-      } catch (error) {
-        console.error('❌ Failed to load profile:', error);
-        throw new Error('Failed to load doctor profile');
-      }
-    }
-    return profileData;
-  };
-
-  const loadChatList = async () => {
+  const loadChatList = async (doctorId) => {
     try {
       setError('');
 
-      const doctorProfile = await ensureProfileData();
-
-      if (!doctorProfile?._id) {
-        throw new Error('Doctor profile not available');
+      if (!doctorId) {
+        throw new Error('Doctor ID not available');
       }
 
       const { data } = await axios.post(
         `${backendUrl}/api/chat/doctor/chat-list`,
-        { docId: doctorProfile._id },
-        { headers: { dtoken: dToken } }
+        { docId: doctorId },
+        {
+          headers: { dtoken: dToken },
+          timeout: 10000
+        }
       );
 
       if (data.success) {
@@ -82,30 +108,39 @@ const ChatWithPatient = () => {
         if (data.chatList && data.chatList.length > 0) {
           const firstPatient = data.chatList[0];
           setSelectedPatient(firstPatient);
-          await loadChatHistory(firstPatient.patientId);
+          await loadChatHistory(firstPatient.patientId, doctorId);
         }
+        return true;
       } else {
         setError(data.message || 'Failed to load chat list');
-        console.error('API Error:', data.message);
+        return false;
       }
     } catch (error) {
       console.error('❌ Error loading chat list:', error);
-      setError(error.message || 'Failed to load conversations. Please check your connection.');
-    } finally {
-      setLoading(false);
+      if (error.code === 'ECONNABORTED') {
+        setError('Request timeout. Please check your internet connection.');
+      } else {
+        setError(error.message || 'Failed to load conversations.');
+      }
+      return false;
     }
   };
 
-  const loadChatHistory = async (patientId) => {
+  const loadChatHistory = async (patientId, doctorId = null) => {
     try {
-      if (!profileData?._id || !patientId) {
+      const currentDoctorId = doctorId || profileData?._id;
+
+      if (!currentDoctorId || !patientId) {
         console.error('Missing required data for loading chat history');
         return;
       }
 
       const { data: appointmentsData } = await axios.get(
         `${backendUrl}/api/doctor/appointments`,
-        { headers: { dtoken: dToken } }
+        {
+          headers: { dtoken: dToken },
+          timeout: 10000
+        }
       );
 
       if (appointmentsData.success) {
@@ -116,14 +151,20 @@ const ChatWithPatient = () => {
         if (patientAppointments.length > 0) {
           const patientAppointment = patientAppointments[0];
 
+          // ✅ Store appointment info
+          setAppointmentInfo(patientAppointment);
+
           const { data: chatData } = await axios.post(
             `${backendUrl}/api/chat/doctor/chat-history`,
             {
-              doctorId: profileData._id,
+              doctorId: currentDoctorId,
               patientId: patientId,
               appointmentId: patientAppointment._id
             },
-            { headers: { dtoken: dToken } }
+            {
+              headers: { dtoken: dToken },
+              timeout: 10000
+            }
           );
 
           if (chatData.success) {
@@ -132,12 +173,11 @@ const ChatWithPatient = () => {
             );
             setMessages(sortedMessages);
           } else {
-            console.warn('No chat history found:');
             setMessages([]);
           }
         } else {
-          console.warn('No appointments found for patient:');
           setMessages([]);
+          setAppointmentInfo(null);
         }
       }
     } catch (error) {
@@ -167,16 +207,26 @@ const ChatWithPatient = () => {
     return null;
   };
 
-  const initializeSocket = () => {
+  const initializeSocket = (doctorId) => {
     try {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+
       const socketConnection = io(backendUrl, {
         transports: ['websocket', 'polling'],
-        timeout: 10000
+        timeout: 10000,
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000
       });
 
+      socketRef.current = socketConnection;
       setSocket(socketConnection);
 
       socketConnection.on('connect', () => {
+        console.log('✅ Doctor Socket connected');
         setConnectionStatus('connected');
       });
 
@@ -194,11 +244,19 @@ const ChatWithPatient = () => {
         if (selectedPatient && message.patientId === selectedPatient.patientId) {
           setMessages(prev => {
             const exists = prev.some(msg => msg._id === message._id);
-            const tempExists = prev.some(msg => msg.message === message.message && msg.senderType === message.senderType && msg._id.startsWith('temp-'));
+            const tempExists = prev.some(msg =>
+              msg.message === message.message &&
+              msg.senderType === message.senderType &&
+              msg._id.startsWith('temp-')
+            );
 
             if (!exists) {
               if (message.senderType === 'doctor' && tempExists) {
-                const filtered = prev.filter(msg => !(msg.message === message.message && msg.senderType === message.senderType && msg._id.startsWith('temp-')));
+                const filtered = prev.filter(msg =>
+                  !(msg.message === message.message &&
+                    msg.senderType === message.senderType &&
+                    msg._id.startsWith('temp-'))
+                );
                 return [...filtered, message];
               }
               return [...prev, message];
@@ -237,7 +295,9 @@ const ChatWithPatient = () => {
             });
           }
 
-          return updatedList.sort((a, b) => new Date(b.lastMessageTime) - new Date(a.lastMessageTime));
+          return updatedList.sort((a, b) =>
+            new Date(b.lastMessageTime) - new Date(a.lastMessageTime)
+          );
         });
       });
 
@@ -250,8 +310,7 @@ const ChatWithPatient = () => {
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !socket || !selectedPatient) {
-      console.log('Cannot send message - missing requirements');
+    if (!newMessage.trim() || !socket || !selectedPatient || !profileData?._id) {
       return;
     }
 
@@ -297,9 +356,7 @@ const ChatWithPatient = () => {
           };
 
           setMessages(prev => [...prev, optimisticMessage]);
-
         } else {
-          console.error('No appointment found for patient');
           setError('No appointment found for this patient.');
         }
       }
@@ -314,9 +371,10 @@ const ChatWithPatient = () => {
   const handlePatientSelect = async (patient) => {
     setSelectedPatient(patient);
     setMessages([]);
+    setAppointmentInfo(null);
     await loadChatHistory(patient.patientId);
 
-    if (socket && socket.connected) {
+    if (socket && socket.connected && profileData?._id) {
       socket.emit('join_chat', {
         doctorId: profileData._id,
         patientId: patient.patientId
@@ -327,12 +385,49 @@ const ChatWithPatient = () => {
   const handleMobileBack = () => {
     setSelectedPatient(null);
     setMessages([]);
+    setAppointmentInfo(null);
   };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
+    }
+  };
+
+  const handleRetry = async () => {
+    setLoading(true);
+    setError('');
+    isInitializedRef.current = false;
+
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+      loadingTimeoutRef.current = null;
+    }
+
+    try {
+      let currentProfile = profileData;
+      if (!currentProfile) {
+        await getProfileData();
+        await new Promise(resolve => setTimeout(resolve, 500));
+        currentProfile = profileData;
+      }
+
+      if (currentProfile?._id) {
+        initializeSocket(currentProfile._id);
+        const success = await loadChatList(currentProfile._id);
+
+        if (success) {
+          isInitializedRef.current = true;
+        }
+      } else {
+        setError('Unable to load doctor profile. Please try logging in again.');
+      }
+    } catch (error) {
+      console.error('Retry error:', error);
+      setError('Failed to initialize chat. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -397,54 +492,139 @@ const ChatWithPatient = () => {
     return url;
   };
 
-  const handleRetry = async () => {
-    setLoading(true);
-    setError('');
-    setRetryCount(prev => prev + 1);
-    await loadChatList();
+  // ✅ System Message Component (WhatsApp style)
+  const SystemMessage = ({ message, icon }) => (
+    <div className="flex justify-center my-6">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-amber-50/80 backdrop-blur-sm border border-amber-200/50 px-4 py-2 rounded-lg shadow-sm max-w-xs"
+      >
+        <div className="flex items-center gap-2 justify-center">
+          {icon}
+          <p className="text-xs font-semibold text-amber-800 text-center">
+            {message}
+          </p>
+        </div>
+      </motion.div>
+    </div>
+  );
+
+  // ✅ Insert "Session Ended" message in chronological order
+  const insertSessionEndedMarker = (messages, appointmentEndTime) => {
+    if (!appointmentEndTime) return messages;
+
+    const result = [];
+    let sessionEndedInserted = false;
+
+    for (let i = 0; i < messages.length; i++) {
+      const currentMsg = messages[i];
+      const currentMsgTime = new Date(currentMsg.timestamp);
+
+      // Insert "Session Ended" before the first message AFTER the end time
+      if (!sessionEndedInserted && currentMsgTime > appointmentEndTime) {
+        result.push({
+          _id: 'session-ended-marker',
+          type: 'system',
+          timestamp: appointmentEndTime,
+          message: 'Session Ended • consultation completed'
+        });
+        sessionEndedInserted = true;
+      }
+
+      result.push(currentMsg);
+    }
+
+    // If all messages are before end time, add marker at the end
+    if (!sessionEndedInserted && messages.length > 0) {
+      const lastMsgTime = new Date(messages[messages.length - 1].timestamp);
+      if (lastMsgTime < appointmentEndTime && new Date() > appointmentEndTime) {
+        result.push({
+          _id: 'session-ended-marker',
+          type: 'system',
+          timestamp: appointmentEndTime,
+          message: 'Session Ended • consultation completed'
+        });
+      }
+    }
+
+    return result;
   };
 
   useEffect(() => {
-    if (dToken) {
-      const initializeChat = async () => {
-        try {
-          await ensureProfileData();
+    if (isInitializedRef.current) {
+      return;
+    }
 
-          if (profileData?._id) {
-            const socketConnection = initializeSocket();
-            await loadChatList();
-
-            const loadingTimeout = setTimeout(() => {
-              if (loading) {
-                console.warn('⚠️ Loading timeout - forcing stop');
-                setLoading(false);
-                setError('Loading took too long. Please refresh the page.');
-              }
-            }, 15000);
-
-            return () => {
-              clearTimeout(loadingTimeout);
-              if (socketConnection) {
-                socketConnection.disconnect();
-              }
-            };
-          } else {
-            setError('Doctor profile not available. Please complete your profile setup.');
-            setLoading(false);
-          }
-        } catch (error) {
-          console.error('❌ Initialization error:', error);
-          setError(error.message || 'Failed to initialize chat');
-          setLoading(false);
-        }
-      };
-
-      initializeChat();
-    } else {
+    if (!dToken) {
       setError('Authentication required. Please log in again.');
       setLoading(false);
+      return;
     }
-  }, [dToken, profileData, retryCount]);
+
+    const initializeChat = async () => {
+      try {
+        setLoading(true);
+        setError('');
+
+        loadingTimeoutRef.current = setTimeout(() => {
+          if (loading && !isInitializedRef.current) {
+            console.warn('⚠️ Loading timeout');
+            setLoading(false);
+            setError('Loading is taking longer than expected. Please try refreshing.');
+          }
+        }, 30000);
+
+        let currentProfile = profileData;
+        if (!currentProfile) {
+          console.log('📥 Loading profile data...');
+          await getProfileData();
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          setLoading(false);
+          return;
+        }
+
+        if (!currentProfile._id) {
+          throw new Error('Doctor profile not available. Please complete your profile setup.');
+        }
+
+        console.log('✅ Profile loaded:', currentProfile.name);
+
+        console.log('🔌 Initializing socket...');
+        const socketConnection = initializeSocket(currentProfile._id);
+
+        console.log('📋 Loading chat list...');
+        const success = await loadChatList(currentProfile._id);
+
+        if (success) {
+          console.log('✅ Chat initialized successfully');
+          isInitializedRef.current = true;
+        }
+
+      } catch (error) {
+        console.error('❌ Initialization error:', error);
+        setError(error.message || 'Failed to initialize chat');
+      } finally {
+        setLoading(false);
+        if (loadingTimeoutRef.current) {
+          clearTimeout(loadingTimeoutRef.current);
+          loadingTimeoutRef.current = null;
+        }
+      }
+    };
+
+    initializeChat();
+
+    return () => {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, [dToken, profileData?._id]);
 
   if (error) {
     return (
@@ -468,10 +648,10 @@ const ChatWithPatient = () => {
               Try Again
             </button>
             <button
-              onClick={() => navigate('/doctor-profile')}
+              onClick={() => navigate('/doctor-dashboard')}
               className="bg-gray-100 text-gray-700 px-6 py-3 rounded-xl hover:bg-gray-200 transition-all duration-200"
             >
-              Go to Profile
+              Go to Dashboard
             </button>
           </div>
         </motion.div>
@@ -481,12 +661,11 @@ const ChatWithPatient = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
-        <div className="text-center">
-          <Loader message="Loading your messages..." />
-          <p className="text-sm text-gray-500 mt-4">
-            {!profileData ? 'Loading doctor profile...' : 'Loading conversations...'}
-          </p>
+      <div className="w-full h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
+        <div className="flex flex-col items-center justify-center text-center">
+          <div className="flex flex-col items-center justify-center">
+            <Loader message="Loading your messages..." />
+          </div>
         </div>
       </div>
     );
@@ -496,16 +675,16 @@ const ChatWithPatient = () => {
 
   return (
     <div className="h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex overflow-hidden w-full">
-
+      
       <AnimatePresence>
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`fixed top-4 right-4 z-50 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-semibold shadow-lg backdrop-blur-sm ${connectionStatus === 'connected'
-              ? 'bg-emerald-500/90 text-white'
-              : connectionStatus === 'error'
-                ? 'bg-rose-500/90 text-white'
-                : 'bg-amber-500/90 text-white'
+          className={`fixed top-4 right-4 z-50 mt-10 mr-6 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-semibold shadow-lg backdrop-blur-sm ${connectionStatus === 'connected'
+            ? 'bg-emerald-500/90 text-white'
+            : connectionStatus === 'error'
+              ? 'bg-rose-500/90 text-white'
+              : 'bg-amber-500/90 text-white'
             }`}
         >
           <div className="flex items-center gap-1.5 sm:gap-2">
@@ -519,11 +698,12 @@ const ChatWithPatient = () => {
         </motion.div>
       </AnimatePresence>
 
+      {/* Sidebar - Chat List */}
       <div className={`
         ${selectedPatient ? 'hidden md:flex' : 'flex'}
         w-full md:w-80 lg:w-96 bg-white/80 backdrop-blur-xl border-r border-gray-200/50 flex-col shadow-xl
       `}>
-        <div className="p-4 sm:p-6 border-b border-gray-200/50 bg-gradient-to-r from-blue-600 to-indigo-600">
+        <div className="p-4 sm:p-6 border-b rounded-lg border-gray-200/50 bg-gradient-to-r from-blue-600 to-indigo-600">
           <div className="flex items-center justify-between mb-3 sm:mb-4">
             <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
               <MessageCircle className="w-6 h-6 sm:w-7 sm:h-7" />
@@ -567,8 +747,8 @@ const ChatWithPatient = () => {
                   transition={{ delay: index * 0.05 }}
                   onClick={() => handlePatientSelect(patient)}
                   className={`p-3 sm:p-4 mb-2 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-200 ${selectedPatient?.patientId === patient.patientId
-                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 shadow-lg scale-[1.02]'
-                      : 'bg-white hover:bg-gray-50 hover:shadow-md'
+                    ? 'bg-gradient-to-r from-blue-500 to-indigo-500 shadow-lg scale-[1.02]'
+                    : 'bg-white hover:bg-gray-50 hover:shadow-md'
                     }`}
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
@@ -614,12 +794,14 @@ const ChatWithPatient = () => {
         </div>
       </div>
 
+      {/* Main Chat Area */}
       <div className={`
         ${selectedPatient ? 'flex' : 'hidden md:flex'}
         flex-1 flex-col w-full bg-white/50 backdrop-blur-sm transition-all duration-300
       `}>
         {selectedPatient ? (
           <>
+            {/* Chat Header */}
             <div className="border-b border-gray-200/50 p-3 sm:p-5 bg-white/80 backdrop-blur-xl shadow-sm">
               <div className="flex items-center justify-between max-w-6xl mx-auto">
                 <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
@@ -663,6 +845,7 @@ const ChatWithPatient = () => {
               </div>
             </div>
 
+            {/* Messages Area */}
             <div
               className="flex-1 overflow-y-auto custom-scrollbar w-full"
               style={{
@@ -682,94 +865,115 @@ const ChatWithPatient = () => {
                   </div>
                 ) : (
                   <div className="space-y-4 sm:space-y-6">
-                    {Object.entries(groupedMessages).map(([date, msgs]) => (
-                      <div key={date}>
-                        <div className="flex items-center justify-center my-4 sm:my-6">
-                          <div className="bg-white/80 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-full shadow-md border border-gray-200/50">
-                            <span className="text-xs font-semibold text-gray-600">
-                              {formatDateHeader(date)}
-                            </span>
+                    {Object.entries(groupedMessages).map(([date, msgs]) => {
+                      // ✅ Insert session ended marker chronologically within messages
+                      const appointmentEndTime = appointmentInfo ? getAppointmentEndTime(appointmentInfo) : null;
+const messagesWithMarker = insertSessionEndedMarker(msgs, appointmentEndTime, appointmentInfo);                      
+                      return (
+                        <div key={date}>
+                          <div className="flex items-center justify-center my-4 sm:my-6">
+                            <div className="bg-white/80 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-full shadow-md border border-gray-200/50">
+                              <span className="text-xs font-semibold text-gray-600">
+                                {formatDateHeader(date)}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="space-y-3 sm:space-y-4">
+                            {messagesWithMarker.map((message, index) => {
+                              // ✅ System message (Session Ended)
+                              if (message.type === 'system') {
+                                return (
+                                  <SystemMessage 
+                                    key={message._id}
+                                    message={message.message} 
+                                    icon={<AlertCircle className="w-3.5 h-3.5 text-amber-600" />}
+                                  />
+                                );
+                              }
+
+                              // Regular message
+                              const isCurrentUserSender = message.senderType === 'doctor';
+                              const isTempMessage = message._id && message._id.toString().startsWith('temp-');
+                              const showAvatar = index === 0 || 
+                                messagesWithMarker[index - 1].type === 'system' ||
+                                messagesWithMarker[index - 1].senderType !== message.senderType;
+
+                              return (
+                                <motion.div
+                                  key={message._id || `temp-${message.timestamp}`}
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  className={`flex items-end gap-1.5 sm:gap-2 ${isCurrentUserSender ? 'justify-end' : 'justify-start'}`}
+                                >
+                                  {!isCurrentUserSender && (
+                                    <div className={`w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0 ${showAvatar ? 'opacity-100' : 'opacity-0'}`}>
+                                      <img
+                                        src={getSafeImageUrl(selectedPatient.patientImage)}
+                                        alt="Patient"
+                                        className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover border-2 border-white shadow-md"
+                                      />
+                                    </div>
+                                  )}
+
+                                  <div
+                                    className={`max-w-[85%] sm:max-w-lg px-3 py-2 sm:px-5 sm:py-3 rounded-2xl shadow-md ${
+                                      isCurrentUserSender
+                                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-br-sm'
+                                        : 'bg-white text-gray-900 rounded-bl-sm border border-gray-200/50'
+                                    } ${isTempMessage ? 'opacity-70' : ''}`}
+                                  >
+                                    <p className="text-xs sm:text-sm leading-relaxed break-words">{message.message}</p>
+                                    <div
+                                      className={`flex items-center gap-1 mt-1 ${
+                                        isCurrentUserSender ? 'justify-end' : 'justify-start'
+                                      }`}
+                                    >
+                                      <span
+                                        className={`text-[10px] sm:text-xs ${
+                                          isCurrentUserSender ? 'text-blue-100' : 'text-gray-500'
+                                        }`}
+                                      >
+                                        {formatTime(message.timestamp)}
+                                      </span>
+                                      {isCurrentUserSender && (
+                                        <span>
+                                          {isTempMessage ? (
+                                            <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-200" />
+                                          ) : message.read ? (
+                                            <CheckCheck className="w-3 h-3 sm:w-4 sm:h-4 text-blue-200" />
+                                          ) : (
+                                            <Check className="w-3 h-3 sm:w-4 sm:h-4 text-blue-200" />
+                                          )}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {isCurrentUserSender && (
+                                    <div className={`w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0 ${showAvatar ? 'opacity-100' : 'opacity-0'}`}>
+                                      <img
+                                        src={getSafeImageUrl(profileData?.image)}
+                                        alt={profileData?.name || 'You'}
+                                        className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover border-2 border-white shadow-md"
+                                      />
+                                    </div>
+                                  )}
+                                </motion.div>
+                              );
+                            })}
                           </div>
                         </div>
-
-                        <div className="space-y-3 sm:space-y-4">
-                          {msgs.map((message, index) => {
-                            const isCurrentUserSender = message.senderType === 'doctor';
-                            const isTempMessage = message._id && message._id.toString().startsWith('temp-');
-                            const showAvatar = index === 0 || msgs[index - 1].senderType !== message.senderType;
-
-                            return (
-                              <motion.div
-                                key={message._id || `temp-${message.timestamp}`}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className={`flex items-end gap-1.5 sm:gap-2 ${isCurrentUserSender ? 'justify-end' : 'justify-start'}`}
-                              >
-                                {/* Patient Avatar (displays on the left for patient messages) */}
-                                {!isCurrentUserSender && (
-                                  <div className={`w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0 ${showAvatar ? 'opacity-100' : 'opacity-0'}`}>
-                                    <img
-                                      src={getSafeImageUrl(selectedPatient.patientImage)}
-                                      alt="Patient"
-                                      className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover border-2 border-white shadow-md"
-                                    />
-                                  </div>
-                                )}
-
-                                {/* Message Bubble */}
-                                <div
-                                  className={`max-w-[85%] sm:max-w-lg px-3 py-2 sm:px-5 sm:py-3 rounded-2xl shadow-md ${isCurrentUserSender
-                                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-br-sm'
-                                      : 'bg-white text-gray-900 rounded-bl-sm border border-gray-200/50'
-                                    } ${isTempMessage ? 'opacity-70' : ''}`}
-                                >
-                                  <p className="text-xs sm:text-sm leading-relaxed break-words">{message.message}</p>
-                                  <div
-                                    className={`flex items-center gap-1 mt-1 ${isCurrentUserSender ? 'justify-end' : 'justify-start'
-                                      }`}
-                                  >
-                                    <span
-                                      className={`text-[10px] sm:text-xs ${isCurrentUserSender ? 'text-blue-100' : 'text-gray-500'
-                                        }`}
-                                    >
-                                      {formatTime(message.timestamp)}
-                                    </span>
-                                    {isCurrentUserSender && (
-                                      <span>
-                                        {isTempMessage ? (
-                                          <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-200" />
-                                        ) : message.read ? (
-                                          <CheckCheck className="w-3 h-3 sm:w-4 sm:h-4 text-blue-200" />
-                                        ) : (
-                                          <Check className="w-3 h-3 sm:w-4 sm:h-4 text-blue-200" />
-                                        )}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-
-                                {/* Doctor Avatar (displays on the right for doctor messages) */}
-                                {isCurrentUserSender && (
-                                  <div className={`w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0 ${showAvatar ? 'opacity-100' : 'opacity-0'}`}>
-                                    <img
-                                      src={getSafeImageUrl(profileData?.image)}
-                                      alt={profileData?.name || 'You'}
-                                      className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover border-2 border-white shadow-md"
-                                    />
-                                  </div>
-                                )}
-                              </motion.div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
+                    
                     <div ref={messagesEndRef} />
                   </div>
                 )}
               </div>
             </div>
 
+            {/* Input Area */}
             <div className="border-t border-gray-200/50 p-3 sm:p-5 bg-white/80 backdrop-blur-xl">
               <div className="flex gap-2 sm:gap-3 items-end max-w-5xl mx-auto">
                 <div className="flex-1 relative">

@@ -352,7 +352,7 @@ const ChatWithDoctor = () => {
 
             <div className="flex-1">
               <h1 className="text-xl font-bold text-gray-900 mb-0.5">
-                Dr. {doctorInfo.name}
+                {doctorInfo.name}
               </h1>
               <p className="text-sm text-blue-600 font-medium">{doctorInfo.speciality}</p>
             </div>
@@ -424,7 +424,7 @@ const ChatWithDoctor = () => {
                   <Clock size={64} className="text-blue-300" />
                 </div>
                 <p className="text-xl font-semibold text-gray-600 mb-2">No messages yet</p>
-                <p className="text-sm text-gray-400">Start your consultation with Dr. {doctorInfo.name}</p>
+                <p className="text-sm text-gray-400">Start your consultation with {doctorInfo.name}</p>
               </div>
             ) : (
               messages.map((message, index) => {
@@ -466,7 +466,7 @@ const ChatWithDoctor = () => {
                         } ${isTemp ? 'opacity-60' : ''}`}
                       >
                         {!isPatientSender && (
-                          <p className="text-xs font-semibold text-blue-600 mb-1.5">Dr. {doctorInfo.name}</p>
+                          <p className="text-xs font-semibold text-blue-600 mb-1.5">{doctorInfo.name}</p>
                         )}
                         <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
                           {message.message}
