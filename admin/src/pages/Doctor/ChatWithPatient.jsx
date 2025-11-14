@@ -25,14 +25,14 @@ import Loader from '../../components/Loader';
 // ✅ Helper function to check if appointment is expired
 const isAppointmentExpired = (appointment) => {
   if (!appointment?.slotDate || !appointment?.slotTime) return false;
-  
+
   try {
     const [day, month, year] = appointment.slotDate.split('_');
     const appointmentStart = new Date(`${month} ${day}, ${year} ${appointment.slotTime}`);
-    
+
     // Add 30 minutes to represent session end time
     const appointmentEnd = new Date(appointmentStart.getTime() + 30 * 60000);
-    
+
     const now = new Date();
     return now > appointmentEnd;
   } catch (err) {
@@ -44,7 +44,7 @@ const isAppointmentExpired = (appointment) => {
 // ✅ Helper function to get appointment end time
 const getAppointmentEndTime = (appointment) => {
   if (!appointment?.slotDate || !appointment?.slotTime) return null;
-  
+
   try {
     const [day, month, year] = appointment.slotDate.split('_');
     const appointmentStart = new Date(`${month} ${day}, ${year} ${appointment.slotTime}`);
@@ -626,6 +626,23 @@ const ChatWithPatient = () => {
     };
   }, [dToken, profileData?._id]);
 
+  // 🔄 Auto-refresh when returning to this browser tab
+  
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        window.location.reload();  // 🔥 Refresh the page automatically
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
@@ -675,7 +692,7 @@ const ChatWithPatient = () => {
 
   return (
     <div className="h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex overflow-hidden w-full">
-      
+
       <AnimatePresence>
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -868,7 +885,7 @@ const ChatWithPatient = () => {
                     {Object.entries(groupedMessages).map(([date, msgs]) => {
                       // ✅ Insert session ended marker chronologically within messages
                       const appointmentEndTime = appointmentInfo ? getAppointmentEndTime(appointmentInfo) : null;
-const messagesWithMarker = insertSessionEndedMarker(msgs, appointmentEndTime, appointmentInfo);                      
+                      const messagesWithMarker = insertSessionEndedMarker(msgs, appointmentEndTime, appointmentInfo);
                       return (
                         <div key={date}>
                           <div className="flex items-center justify-center my-4 sm:my-6">
@@ -884,9 +901,9 @@ const messagesWithMarker = insertSessionEndedMarker(msgs, appointmentEndTime, ap
                               // ✅ System message (Session Ended)
                               if (message.type === 'system') {
                                 return (
-                                  <SystemMessage 
+                                  <SystemMessage
                                     key={message._id}
-                                    message={message.message} 
+                                    message={message.message}
                                     icon={<AlertCircle className="w-3.5 h-3.5 text-amber-600" />}
                                   />
                                 );
@@ -895,7 +912,7 @@ const messagesWithMarker = insertSessionEndedMarker(msgs, appointmentEndTime, ap
                               // Regular message
                               const isCurrentUserSender = message.senderType === 'doctor';
                               const isTempMessage = message._id && message._id.toString().startsWith('temp-');
-                              const showAvatar = index === 0 || 
+                              const showAvatar = index === 0 ||
                                 messagesWithMarker[index - 1].type === 'system' ||
                                 messagesWithMarker[index - 1].senderType !== message.senderType;
 
@@ -917,22 +934,19 @@ const messagesWithMarker = insertSessionEndedMarker(msgs, appointmentEndTime, ap
                                   )}
 
                                   <div
-                                    className={`max-w-[85%] sm:max-w-lg px-3 py-2 sm:px-5 sm:py-3 rounded-2xl shadow-md ${
-                                      isCurrentUserSender
+                                    className={`max-w-[85%] sm:max-w-lg px-3 py-2 sm:px-5 sm:py-3 rounded-2xl shadow-md ${isCurrentUserSender
                                         ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-br-sm'
                                         : 'bg-white text-gray-900 rounded-bl-sm border border-gray-200/50'
-                                    } ${isTempMessage ? 'opacity-70' : ''}`}
+                                      } ${isTempMessage ? 'opacity-70' : ''}`}
                                   >
                                     <p className="text-xs sm:text-sm leading-relaxed break-words">{message.message}</p>
                                     <div
-                                      className={`flex items-center gap-1 mt-1 ${
-                                        isCurrentUserSender ? 'justify-end' : 'justify-start'
-                                      }`}
+                                      className={`flex items-center gap-1 mt-1 ${isCurrentUserSender ? 'justify-end' : 'justify-start'
+                                        }`}
                                     >
                                       <span
-                                        className={`text-[10px] sm:text-xs ${
-                                          isCurrentUserSender ? 'text-blue-100' : 'text-gray-500'
-                                        }`}
+                                        className={`text-[10px] sm:text-xs ${isCurrentUserSender ? 'text-blue-100' : 'text-gray-500'
+                                          }`}
                                       >
                                         {formatTime(message.timestamp)}
                                       </span>
@@ -966,7 +980,7 @@ const messagesWithMarker = insertSessionEndedMarker(msgs, appointmentEndTime, ap
                         </div>
                       );
                     })}
-                    
+
                     <div ref={messagesEndRef} />
                   </div>
                 )}
