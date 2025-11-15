@@ -10,6 +10,7 @@ import { createServer } from 'http'
 import { Server } from 'socket.io'
 import ChatMessageModel from './models/chatModel.js'
 import chatRouter from './routes/chatRouter.js'
+import aiRoutes from "./routes/aiRoutes.js";
 
 // app config
 const app = express()
@@ -131,6 +132,7 @@ app.use('/api/admin', adminRouter)
 app.use('/api/doctor', doctorRouter)
 app.use('/api/user', userRouter)
 app.use('/api/chat', chatRouter)
+app.use("/api/ai", aiRoutes);
 
 app.get('/', (req, res) => {
   res.send('API WORKING')
