@@ -2,12 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 
 // --- SVG Icon Components ---
-const ChatIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-  </svg>
-);
-
 const CloseIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -32,8 +26,35 @@ const SendIcon = () => (
   </svg>
 );
 
-const SparklesIcon = () => (
+const StopIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 9h6v6H9V9z" />
+  </svg>
+);
+
+const ClipboardIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+  </svg>
+);
+
+const BroomIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M16 11a4 4 0 01-8 0" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 11v10" />
+  </svg>
+);
+
+const SparklesIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
   </svg>
 );
@@ -50,61 +71,145 @@ const UserIcon = () => (
   </svg>
 );
 
-// --- Random Pulse Animation Component ---
-const RandomPulseButton = ({ onClick, children }) => {
-  const buttonRef = useRef(null);
-  const animationRef = useRef(null);
+// --- Time Utility Function ---
+const timeAgo = (date) => {
+  const now = new Date();
+  const seconds = Math.floor((now - date) / 1000);
 
-  useEffect(() => {
-    const animate = () => {
-      if (buttonRef.current) {
-        // Generate random scale between 1.0 and 1.2
-        const randomScale = 1.0 + Math.random() * 0.2;
-        const randomDuration = 1500 + Math.random() * 1000; // 1.5s to 2.5s
-        
-        buttonRef.current.style.transition = `transform ${randomDuration}ms ease-in-out`;
-        buttonRef.current.style.transform = `scale(${randomScale})`;
-        
-        animationRef.current = setTimeout(() => {
-          if (buttonRef.current) {
-            buttonRef.current.style.transform = 'scale(1)';
-            setTimeout(animate, randomDuration);
-          }
-        }, randomDuration);
-      }
-    };
+  if (seconds < 60) return "Just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+};
 
-    animate();
-
-    return () => {
-      if (animationRef.current) {
-        clearTimeout(animationRef.current);
-      }
-    };
-  }, []);
-
+// --- NEW Animated Chat Button Component ---
+const AnimatedChatButton = ({ onClick }) => {
+  // This component is now a single <button> for accessibility and to ensure
+  // the entire area is clickable.
+  
   return (
-    <button
-      ref={buttonRef}
+    <button 
+      className="relative flex justify-end items-center bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-500 rounded-full shadow-2xl hover:shadow-blue-500/50 transition-shadow duration-300 cursor-pointer"
       onClick={onClick}
-      className="relative flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 text-white rounded-full shadow-2xl hover:shadow-blue-500/50 transition-shadow duration-300"
       aria-label="Open AI Chat"
     >
-      {children}
+      {/* This div animates its width */}
+      <div className="flex items-center animate-slide-in-out-text overflow-hidden whitespace-nowrap">
+        <span className="pl-6 pr-4 text-white text-base font-medium">
+          ask Vaidyam AI
+        </span>
+      </div>
+
+      {/* This is the static circle part of the button */}
+      <div
+        className="relative z-10 flex-shrink-0 flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-800 text-white rounded-full"
+      >
+        <SparklesIcon />
+        {/* We keep the ping as a secondary attention grabber */}
+        <span className="absolute inset-0 rounded-full bg-blue-400 opacity-75 animate-ping-slow"></span>
+      </div>
     </button>
   );
 };
+
+
+// --- Suggested Prompts Component ---
+const SuggestedPrompts = ({ onPromptClick }) => {
+  const prompts = [
+    "What are common cold symptoms?",
+    "Tips for a healthy diet.",
+    "How much sleep do I need?",
+    "Explain stress management.",
+  ];
+
+  return (
+    <div className="px-4 py-2 animate-fade-in-up">
+      <p className="text-sm font-medium text-gray-500 mb-3 text-center">
+        Or try one of these:
+      </p>
+      <div className="grid grid-cols-2 gap-2">
+        {prompts.map((prompt) => (
+          <button
+            key={prompt}
+            onClick={() => onPromptClick(prompt)}
+            className="text-left text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 hover:bg-blue-100 transition-all duration-200"
+          >
+            {prompt}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// --- Chat Message Component ---
+const ChatMessage = ({ msg, onCopy, isCopied }) => {
+  const isUser = msg.sender === "user";
+
+  return (
+    <div
+      className={`flex ${isUser ? "justify-end" : "justify-start"} animate-fade-in-up`}
+    >
+      <div className={`flex gap-2 max-w-[85%] ${isUser ? "flex-row-reverse" : "flex-row"}`}>
+        {/* Avatar */}
+        <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+            isUser 
+              ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white" 
+              : "bg-gradient-to-br from-indigo-500 to-purple-600 text-white"
+          }`}>
+          {isUser ? <UserIcon /> : <BotIcon />}
+        </div>
+        
+        {/* Message Bubble */}
+        <div className="flex flex-col">
+          <div className={`${
+              isUser 
+                ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-2xl rounded-tr-sm" 
+                : "bg-white border border-gray-200 text-gray-800 rounded-2xl rounded-tl-sm shadow-sm"
+            } px-4 py-3 message-bubble`}>
+            <div className={`prose prose-sm max-w-none ${isUser ? "prose-invert" : ""}`}>
+              <ReactMarkdown>{msg.text}</ReactMarkdown>
+            </div>
+          </div>
+          {/* Timestamp and Copy Button */}
+          {msg.timestamp && (
+            <div className={`flex items-center justify-between mt-1.5 ${isUser ? 'flex-row-reverse' : ''}`}>
+              <span className={`text-xs text-gray-400`}>
+                {timeAgo(msg.timestamp)}
+              </span>
+              {!isUser && (
+                <button
+                  onClick={() => onCopy(msg.text)}
+                  className="text-gray-400 hover:text-blue-600 transition-all p-1 rounded-md"
+                  aria-label="Copy message"
+                >
+                  {isCopied ? <CheckIcon /> : <ClipboardIcon />}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 // --- Main Chat Component ---
 const PatientAIChat = () => {
   const [chatState, setChatState] = useState("closed");
   const [inputMessage, setInputMessage] = useState("");
   const [messages, setMessages] = useState([
-    { sender: "ai", text: "Hello! I'm your AI health assistant. How can I help you today?" },
+    { sender: "ai", text: "Hello! I'm your AI health assistant. How can I help you today?", timestamp: new Date() },
   ]);
   const [loading, setLoading] = useState(false);
+  const [copiedText, setCopiedText] = useState("");
   const bottomRef = useRef(null);
   const textareaRef = useRef(null);
+  const abortControllerRef = useRef(null);
 
   // Scroll to bottom whenever messages update
   useEffect(() => {
@@ -131,33 +236,90 @@ const PatientAIChat = () => {
       document.body.style.overflow = "auto";
     };
   }, [chatState]);
+  
+  // Handle copying AI messages
+  const handleCopy = async (text) => {
+    try {
+      // Using execCommand as a fallback for potential iframe restrictions
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";  // Make it invisible
+      textArea.style.top = "-9999px";
+      textArea.style.left = "-9999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
 
+      setCopiedText(text);
+      setTimeout(() => setCopiedText(""), 2000);
+    } catch (err) {
+      console.error("Failed to copy text:", err);
+    }
+  };
+  
+  // Handle suggested prompt click
+  const handlePromptClick = (prompt) => {
+    setInputMessage(prompt);
+    textareaRef.current?.focus();
+  };
+  
+  // Handle stopping the generation
+  const handleStopGenerating = () => {
+    abortControllerRef.current?.abort();
+    setLoading(false);
+  };
+  
+  // Handle clearing the chat
+  const handleClearChat = () => {
+    setMessages([
+      { 
+        sender: "ai", 
+        text: "Chat cleared! How can I help you start fresh?", 
+        timestamp: new Date() 
+      },
+    ]);
+  };
+
+  // --- USER'S handleSend function (Only added AbortController and timestamps) ---
   const handleSend = async () => {
     if (!inputMessage.trim()) return;
 
-    const newMessages = [...messages, { sender: "user", text: inputMessage }];
+    const newMessages = [...messages, { sender: "user", text: inputMessage, timestamp: new Date() }];
     setMessages(newMessages);
     setInputMessage("");
     setLoading(true);
+
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
 
     try {
       const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/ai/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: inputMessage }),
+        signal: signal
       });
 
       const data = await res.json();
       const formattedReply = data.success
         ? data.reply.replace(/\\n/g, "\n")
         : `AI Error: ${data.reply}`;
-      setMessages([...newMessages, { sender: "ai", text: formattedReply }]);
+      
+      setMessages([...newMessages, { sender: "ai", text: formattedReply, timestamp: new Date() }]);
 
     } catch (err) {
-      console.error("AI Error:", err);
-      setMessages([...newMessages, { sender: "ai", text: "AI Error: Could not connect to the service." }]);
+      if (err.name === 'AbortError') {
+        console.log("Fetch aborted by user.");
+        setMessages(prev => [...prev, { sender: "ai", text: "I've stopped generating.", timestamp: new Date() }]);
+      } else {
+        console.error("AI Error:", err);
+        setMessages([...newMessages, { sender: "ai", text: "AI Error: Could not connect to the service.", timestamp: new Date() }]);
+      }
     }
     setLoading(false);
+    abortControllerRef.current = null;
   };
 
   const handleKeyDown = (e) => {
@@ -169,13 +331,10 @@ const PatientAIChat = () => {
 
   return (
     <>
-      {/* Floating Chat Button with Random Pulse */}
+      {/* Floating Chat Button with NEW Animation */}
       {chatState === 'closed' && (
         <div className="fixed bottom-6 right-6 z-50">
-          <RandomPulseButton onClick={() => setChatState('mini')}>
-            <ChatIcon />
-            <span className="absolute inset-0 rounded-full bg-blue-400 opacity-75 animate-ping-slow"></span>
-          </RandomPulseButton>
+          <AnimatedChatButton onClick={() => setChatState('mini')} />
         </div>
       )}
 
@@ -197,7 +356,14 @@ const PatientAIChat = () => {
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-2 relative z-10">
+            <div className="flex items-center gap-1 relative z-10">
+              <button 
+                onClick={handleClearChat}
+                className="hover:bg-white/20 p-2 rounded-lg transition-all duration-200 hover:scale-110"
+                aria-label="Clear Chat"
+              >
+                <BroomIcon />
+              </button>
               <button 
                 onClick={() => setChatState('expanded')} 
                 className="hover:bg-white/20 p-2 rounded-lg transition-all duration-200 hover:scale-110"
@@ -219,36 +385,14 @@ const PatientAIChat = () => {
           <div className="flex-1 p-4 overflow-y-auto bg-gradient-to-b from-gray-50 to-white custom-scrollbar">
             <div className="space-y-4">
               {messages.map((msg, index) => (
-                <div 
+                <ChatMessage 
                   key={index} 
-                  className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"} animate-fade-in-up`}
-                  style={{ animationDelay: `${index * 0.05}s` }}
-                >
-                  <div className={`flex gap-2 max-w-[85%] ${msg.sender === "user" ? "flex-row-reverse" : "flex-row"}`}>
-                    {/* Avatar */}
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                      msg.sender === "user" 
-                        ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white" 
-                        : "bg-gradient-to-br from-indigo-500 to-purple-600 text-white"
-                    }`}>
-                      {msg.sender === "user" ? <UserIcon /> : <BotIcon />}
-                    </div>
-                    
-                    {/* Message Bubble */}
-                    <div className={`${
-                      msg.sender === "user" 
-                        ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-2xl rounded-tr-sm" 
-                        : "bg-white border border-gray-200 text-gray-800 rounded-2xl rounded-tl-sm shadow-sm"
-                    } px-4 py-3 message-bubble`}>
-                      <div className={`prose prose-sm max-w-none ${msg.sender === "user" ? "prose-invert" : ""}`}>
-                        <ReactMarkdown>{msg.text}</ReactMarkdown>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  msg={msg} 
+                  onCopy={handleCopy}
+                  isCopied={copiedText === msg.text}
+                />
               ))}
               
-              {/* Loading Indicator */}
               {loading && (
                 <div className="flex justify-start animate-fade-in-up">
                   <div className="flex gap-2">
@@ -267,6 +411,9 @@ const PatientAIChat = () => {
               )}
               <div ref={bottomRef}></div>
             </div>
+            {messages.length === 1 && !loading && (
+              <SuggestedPrompts onPromptClick={handlePromptClick} />
+            )}
           </div>
 
           {/* Input Area */}
@@ -281,14 +428,24 @@ const PatientAIChat = () => {
                 rows={1}
                 className="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none max-h-32 text-sm transition-all duration-200"
               />
-              <button
-                onClick={handleSend}
-                disabled={loading || !inputMessage.trim()}
-                className="bg-gradient-to-br from-blue-600 to-blue-700 text-white p-3 rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 flex-shrink-0 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
-                aria-label="Send Message"
-              >
-                <SendIcon />
-              </button>
+              {loading ? (
+                <button
+                  onClick={handleStopGenerating}
+                  className="bg-gradient-to-br from-red-500 to-red-600 text-white p-3 rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 flex-shrink-0 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+                  aria-label="Stop Generating"
+                >
+                  <StopIcon />
+                </button>
+              ) : (
+                <button
+                  onClick={handleSend}
+                  disabled={!inputMessage.trim()}
+                  className="bg-gradient-to-br from-blue-600 to-blue-700 text-white p-3 rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 flex-shrink-0 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+                  aria-label="Send Message"
+                >
+                  <SendIcon />
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -299,7 +456,7 @@ const PatientAIChat = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm animate-fade-in">
           <div className="w-full h-full max-w-[90vw] max-h-[90vh] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-scale-in border border-gray-300">
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white px-6 py-5 flex justify-between items-center relative overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white px-6 py-5 flex justify-between items-center relative overflow-hidden flex-shrink-0">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer"></div>
               <div className="flex items-center gap-3 relative z-10">
                 <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
@@ -314,6 +471,13 @@ const PatientAIChat = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2 relative z-10">
+                <button 
+                  onClick={handleClearChat}
+                  className="hover:bg-white/20 p-2.5 rounded-lg transition-all duration-200 hover:scale-110"
+                  aria-label="Clear Chat"
+                >
+                  <BroomIcon />
+                </button>
                 <button 
                   onClick={() => setChatState('mini')} 
                   className="hover:bg-white/20 p-2.5 rounded-lg transition-all duration-200 hover:scale-110"
@@ -335,36 +499,14 @@ const PatientAIChat = () => {
             <div className="flex-1 p-6 overflow-y-auto bg-gradient-to-b from-gray-50 to-white custom-scrollbar">
               <div className="max-w-4xl mx-auto space-y-6">
                 {messages.map((msg, index) => (
-                  <div 
+                  <ChatMessage 
                     key={index} 
-                    className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"} animate-fade-in-up`}
-                    style={{ animationDelay: `${index * 0.05}s` }}
-                  >
-                    <div className={`flex gap-3 max-w-[80%] ${msg.sender === "user" ? "flex-row-reverse" : "flex-row"}`}>
-                      {/* Avatar */}
-                      <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                        msg.sender === "user" 
-                          ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg" 
-                          : "bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg"
-                      }`}>
-                        {msg.sender === "user" ? <UserIcon /> : <BotIcon />}
-                      </div>
-                      
-                      {/* Message Bubble */}
-                      <div className={`${
-                        msg.sender === "user" 
-                          ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-3xl rounded-tr-md shadow-lg" 
-                          : "bg-white border border-gray-200 text-gray-800 rounded-3xl rounded-tl-md shadow-md"
-                      } px-6 py-4 message-bubble`}>
-                        <div className={`prose prose-base max-w-none ${msg.sender === "user" ? "prose-invert" : ""}`}>
-                          <ReactMarkdown>{msg.text}</ReactMarkdown>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    msg={msg} 
+                    onCopy={handleCopy}
+                    isCopied={copiedText === msg.text}
+                  />
                 ))}
                 
-                {/* Loading Indicator */}
                 {loading && (
                   <div className="flex justify-start animate-fade-in-up">
                     <div className="flex gap-3">
@@ -383,10 +525,15 @@ const PatientAIChat = () => {
                 )}
                 <div ref={bottomRef}></div>
               </div>
+              {messages.length === 1 && !loading && (
+                <div className="max-w-4xl mx-auto">
+                  <SuggestedPrompts onPromptClick={handlePromptClick} />
+                </div>
+              )}
             </div>
 
             {/* Input Area */}
-            <div className="p-6 bg-white border-t border-gray-200">
+            <div className="p-6 bg-white border-t border-gray-200 flex-shrink-0">
               <div className="max-w-4xl mx-auto">
                 <div className="flex items-end gap-3">
                   <textarea
@@ -398,14 +545,24 @@ const PatientAIChat = () => {
                     rows={1}
                     className="flex-1 border border-gray-300 rounded-2xl px-5 py-3.5 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none max-h-40 text-base transition-all duration-200"
                   />
-                  <button
-                    onClick={handleSend}
-                    disabled={loading || !inputMessage.trim()}
-                    className="bg-gradient-to-br from-blue-600 to-blue-700 text-white px-6 py-3.5 rounded-2xl hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 flex-shrink-0 shadow-lg hover:shadow-xl font-medium hover:scale-105 active:scale-95"
-                    aria-label="Send Message"
-                  >
-                    <SendIcon />
-                  </button>
+                  {loading ? (
+                    <button
+                      onClick={handleStopGenerating}
+                      className="bg-gradient-to-br from-red-500 to-red-600 text-white px-6 py-3.5 rounded-2xl hover:from-red-600 hover:to-red-700 transition-all duration-200 flex-shrink-0 shadow-lg hover:shadow-xl font-medium hover:scale-105 active:scale-95"
+                      aria-label="Stop Generating"
+                    >
+                      <StopIcon />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleSend}
+                      disabled={!inputMessage.trim()}
+                      className="bg-gradient-to-br from-blue-600 to-blue-700 text-white px-6 py-3.5 rounded-2xl hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 flex-shrink-0 shadow-lg hover:shadow-xl font-medium hover:scale-105 active:scale-95"
+                      aria-label="Send Message"
+                    >
+                      <SendIcon />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -415,6 +572,30 @@ const PatientAIChat = () => {
 
       {/* Custom Styles */}
       <style>{`
+        /* NEW: Chat Button Slide Animation */
+        @keyframes slide-in-out-text {
+          0% {
+            width: 0;
+            opacity: 0;
+          }
+          30% {
+            width: 150px; /* Width of "ask Vaidyam AI" + padding */
+            opacity: 1;
+          }
+          70% {
+            width: 150px; /* Hold the expanded state */
+            opacity: 1;
+          }
+          100% {
+            width: 0;
+            opacity: 0;
+          }
+        }
+        .animate-slide-in-out-text {
+          /* Total duration 6s: 1.5s expand, 1.5s hold, 3s collapse/wait */
+          animation: slide-in-out-text 6s ease-in-out infinite;
+        }
+
         /* Shimmer Animation for Header */
         @keyframes shimmer {
           0% { transform: translateX(-100%); }
@@ -514,11 +695,18 @@ const PatientAIChat = () => {
 
         /* Prose Styles for Markdown */
         .prose p {
-          margin: 0;
+          margin-top: 0;
+          margin-bottom: 0.5em;
+        }
+        .prose p:last-child {
+           margin-bottom: 0;
         }
         .prose ul, .prose ol {
           margin: 0.5em 0;
+          padding-left: 1.5em;
         }
+        .prose li > p { display: inline; }
+        .prose li { margin-top: 0.25em; margin-bottom: 0.25em; }
         .prose code {
           background: rgba(0,0,0,0.1);
           padding: 0.2em 0.4em;
