@@ -36,6 +36,7 @@ import General_physician from './General_physician.svg'
 import Gynecologist from './Gynecologist.svg'
 import Neurologist from './Neurologist.svg'
 import Pediatricians from './Pediatricians.svg'
+import mic_icon from './mic_icon.png'
 
 
 export const assets = {
@@ -50,6 +51,7 @@ export const assets = {
     arrow_icon,
     contact_image,
     about_image,
+    mic_icon,
     menu_icon,
     cross_icon,
     dropdown_icon,

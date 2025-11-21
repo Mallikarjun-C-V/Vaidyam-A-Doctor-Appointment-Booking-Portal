@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
+import { assets } from '../assets/assets'
 
 // --- SVG Icon Components ---
 const CloseIcon = () => (
@@ -155,21 +156,13 @@ const ChatMessage = ({ msg, onCopy, isCopied }) => {
     >
       <div className={`flex gap-2 max-w-[85%] ${isUser ? "flex-row-reverse" : "flex-row"}`}>
         {/* Avatar */}
-        <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-            isUser 
-              ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white" 
-              : "bg-gradient-to-br from-indigo-500 to-purple-600 text-white"
-          }`}>
+        <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${isUser ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white" : "bg-gradient-to-br from-indigo-500 to-purple-600 text-white"}`}>
           {isUser ? <UserIcon /> : <BotIcon />}
         </div>
         
         {/* Message Bubble */}
         <div className="flex flex-col">
-          <div className={`${
-              isUser 
-                ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-2xl rounded-tr-sm" 
-                : "bg-white border border-gray-200 text-gray-800 rounded-2xl rounded-tl-sm shadow-sm"
-            } px-4 py-3 message-bubble`}>
+          <div className={`${isUser ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-2xl rounded-tr-sm" : "bg-white border border-gray-200 text-gray-800 rounded-2xl rounded-tl-sm shadow-sm"} px-4 py-3 message-bubble`}>
             <div className={`prose prose-sm max-w-none ${isUser ? "prose-invert" : ""}`}>
               <ReactMarkdown>{msg.text}</ReactMarkdown>
             </div>
@@ -211,6 +204,12 @@ const PatientAIChat = () => {
   const textareaRef = useRef(null);
   const abortControllerRef = useRef(null);
 
+  // --- Voice Recognition State ---
+  const [isListening, setIsListening] = useState(false);
+  const [timer, setTimer] = useState(0);
+  const recognitionRef = useRef(null);
+  const timerIntervalRef = useRef(null);
+
   // Scroll to bottom whenever messages update
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -236,7 +235,18 @@ const PatientAIChat = () => {
       document.body.style.overflow = "auto";
     };
   }, [chatState]);
-  
+
+  // Cleanup recognition on unmount
+  useEffect(() => {
+    return () => {
+      // stop recognition if still active
+      try {
+        recognitionRef.current?.stop();
+      } catch (e) {}
+      clearInterval(timerIntervalRef.current);
+    };
+  }, []);
+
   // Handle copying AI messages
   const handleCopy = async (text) => {
     try {
@@ -280,6 +290,84 @@ const PatientAIChat = () => {
         timestamp: new Date() 
       },
     ]);
+  };
+
+  // --- Voice Logic (Frontend Only) ---
+  const startListening = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert("Your browser does not support Speech Recognition. Try Chrome.");
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognitionRef.current = new SpeechRecognition();
+
+    recognitionRef.current.continuous = true;
+    recognitionRef.current.interimResults = true;
+
+    recognitionRef.current.onstart = () => {
+      setIsListening(true);
+      setTimer(0);
+      timerIntervalRef.current = setInterval(() => {
+        setTimer((prev) => prev + 1);
+      }, 1000);
+    };
+
+    recognitionRef.current.onresult = (event) => {
+      let finalTranscript = '';
+      // Build transcript from results (includes interim)
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        finalTranscript += event.results[i][0].transcript;
+      }
+      setInputMessage(finalTranscript);
+    };
+
+    recognitionRef.current.onerror = (event) => {
+      console.error("Speech recognition error", event.error);
+      if (event.error === 'network') {
+        alert("Network Error: Please check your internet connection.");
+      } else if (event.error === 'not-allowed') {
+        alert("Microphone blocked.");
+      } else if (event.error === 'no-speech') {
+        // ignore; don't spam user
+      }
+      stopListening();
+    };
+
+    recognitionRef.current.onend = () => {
+      // ensure stopped state
+      stopListening();
+    };
+
+    try {
+      recognitionRef.current.start();
+    } catch (e) {
+      console.error("Could not start recognition:", e);
+    }
+  };
+
+  const stopListening = () => {
+    try {
+      if (recognitionRef.current) {
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onend = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
+    } catch (e) {
+      // ignore if already stopped
+    }
+    setIsListening(false);
+    clearInterval(timerIntervalRef.current);
+    timerIntervalRef.current = null;
+  };
+
+  // Format time for UI (mm:ss)
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
   // --- USER'S handleSend function (Only added AbortController and timestamps) ---
@@ -545,6 +633,17 @@ const PatientAIChat = () => {
                     rows={1}
                     className="flex-1 border border-gray-300 rounded-2xl px-5 py-3.5 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none max-h-40 text-base transition-all duration-200"
                   />
+
+                  {/* --- MIC button: VISIBLE ONLY IN EXPANDED MODE --- */}
+                  <button
+                    onClick={startListening}
+                    className="flex items-center justify-center p-3 rounded-2xl hover:scale-105 transition-shadow duration-200 shadow-md"
+                    aria-label="Start voice input"
+                    title="Voice input"
+                  >
+                    <img src={assets.mic_icon} alt="mic" className="w-6 h-6" />
+                  </button>
+
                   {loading ? (
                     <button
                       onClick={handleStopGenerating}
@@ -566,6 +665,27 @@ const PatientAIChat = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Listening Overlay */}
+      {isListening && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex flex-col items-center justify-center text-white cursor-pointer"
+          onClick={stopListening}
+        >
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-2">Listening…</h2>
+            <p className="text-lg opacity-80">{formatTime(timer)}</p>
+
+            <div className="mt-6 flex gap-2 justify-center">
+              <span className="w-3 h-3 bg-blue-400 rounded-full animate-bounce"></span>
+              <span className="w-3 h-3 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></span>
+              <span className="w-3 h-3 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></span>
+            </div>
+
+            <p className="mt-6 text-sm opacity-60">Tap anywhere to stop</p>
           </div>
         </div>
       )}
