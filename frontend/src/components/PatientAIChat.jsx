@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
-import { assets } from '../assets/assets'
 
-// --- SVG Icon Components ---
+// --- ICONS ---
 const CloseIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -72,11 +71,22 @@ const UserIcon = () => (
   </svg>
 );
 
+const GalleryIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+  </svg>
+);
+
+const MicIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+  </svg>
+);
+
 // --- Time Utility Function ---
 const timeAgo = (date) => {
   const now = new Date();
   const seconds = Math.floor((now - date) / 1000);
-
   if (seconds < 60) return "Just now";
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}m ago`;
@@ -86,38 +96,28 @@ const timeAgo = (date) => {
   return `${days}d ago`;
 };
 
-// --- NEW Animated Chat Button Component ---
+// --- Animated Chat Button ---
 const AnimatedChatButton = ({ onClick }) => {
-  // This component is now a single <button> for accessibility and to ensure
-  // the entire area is clickable.
-  
   return (
     <button 
       className="relative flex justify-end items-center bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-500 rounded-full shadow-2xl hover:shadow-blue-500/50 transition-shadow duration-300 cursor-pointer"
       onClick={onClick}
       aria-label="Open AI Chat"
     >
-      {/* This div animates its width */}
       <div className="flex items-center animate-slide-in-out-text overflow-hidden whitespace-nowrap">
         <span className="pl-6 pr-4 text-white text-base font-medium">
           ask Vaidyam AI
         </span>
       </div>
-
-      {/* This is the static circle part of the button */}
-      <div
-        className="relative z-10 flex-shrink-0 flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-800 text-white rounded-full"
-      >
+      <div className="relative z-10 flex-shrink-0 flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-800 text-white rounded-full">
         <SparklesIcon />
-        {/* We keep the ping as a secondary attention grabber */}
         <span className="absolute inset-0 rounded-full bg-blue-400 opacity-75 animate-ping-slow"></span>
       </div>
     </button>
   );
 };
 
-
-// --- Suggested Prompts Component ---
+// --- Suggested Prompts ---
 const SuggestedPrompts = ({ onPromptClick }) => {
   const prompts = [
     "What are common cold symptoms?",
@@ -146,15 +146,14 @@ const SuggestedPrompts = ({ onPromptClick }) => {
   );
 };
 
-// --- Chat Message Component ---
-const ChatMessage = ({ msg, onCopy, isCopied }) => {
+// --- Chat Message ---
+const ChatMessage = ({ msg, onCopy, isCopied, isExpanded }) => {
   const isUser = msg.sender === "user";
 
   return (
-    <div
-      className={`flex ${isUser ? "justify-end" : "justify-start"} animate-fade-in-up`}
-    >
+    <div className={`flex ${isUser ? "justify-end" : "justify-start"} animate-fade-in-up`}>
       <div className={`flex gap-2 max-w-[85%] ${isUser ? "flex-row-reverse" : "flex-row"}`}>
+        
         {/* Avatar */}
         <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${isUser ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white" : "bg-gradient-to-br from-indigo-500 to-purple-600 text-white"}`}>
           {isUser ? <UserIcon /> : <BotIcon />}
@@ -163,11 +162,21 @@ const ChatMessage = ({ msg, onCopy, isCopied }) => {
         {/* Message Bubble */}
         <div className="flex flex-col">
           <div className={`${isUser ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-2xl rounded-tr-sm" : "bg-white border border-gray-200 text-gray-800 rounded-2xl rounded-tl-sm shadow-sm"} px-4 py-3 message-bubble`}>
+            
+            {/* --- IMAGE DISPLAY LOGIC --- */}
+            {/* Only show image if user sent it AND we are in Expanded mode */}
+            {msg.image && isExpanded && (
+              <div className="mb-2">
+                 <img src={msg.image} alt="uploaded" className="chat-image-thumb" />
+              </div>
+            )}
+
             <div className={`prose prose-sm max-w-none ${isUser ? "prose-invert" : ""}`}>
               <ReactMarkdown>{msg.text}</ReactMarkdown>
             </div>
           </div>
-          {/* Timestamp and Copy Button */}
+          
+          {/* Timestamp and Copy */}
           {msg.timestamp && (
             <div className={`flex items-center justify-between mt-1.5 ${isUser ? 'flex-row-reverse' : ''}`}>
               <span className={`text-xs text-gray-400`}>
@@ -191,31 +200,30 @@ const ChatMessage = ({ msg, onCopy, isCopied }) => {
 };
 
 
-// --- Main Chat Component ---
+// --- MAIN COMPONENT ---
 const PatientAIChat = () => {
-  const [chatState, setChatState] = useState("closed");
+  const [chatState, setChatState] = useState("closed"); // 'closed', 'mini', 'expanded'
   const [inputMessage, setInputMessage] = useState("");
   const [messages, setMessages] = useState([
     { sender: "ai", text: "Hello! I'm your AI health assistant. How can I help you today?", timestamp: new Date() },
   ]);
   const [loading, setLoading] = useState(false);
   const [copiedText, setCopiedText] = useState("");
+  
+  // --- NEW IMAGE STATE ---
+  const [selectedImage, setSelectedImage] = useState(null);
+
   const bottomRef = useRef(null);
   const textareaRef = useRef(null);
   const abortControllerRef = useRef(null);
+  const fileInputRef = useRef(null);
 
-  // --- Voice Recognition State ---
-  const [isListening, setIsListening] = useState(false);
-  const [timer, setTimer] = useState(0);
-  const recognitionRef = useRef(null);
-  const timerIntervalRef = useRef(null);
-
-  // Scroll to bottom whenever messages update
+  // Scroll logic
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, selectedImage]); // Also scroll when image preview appears
 
-  // Auto-resize textarea
+  // Resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -223,160 +231,146 @@ const PatientAIChat = () => {
     }
   }, [inputMessage]);
 
-  // Prevent background scroll when expanded
+  // Overflow handling
   useEffect(() => {
     if (chatState === "expanded") {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "auto";
     }
-
-    return () => {
-      document.body.style.overflow = "auto";
-    };
+    return () => { document.body.style.overflow = "auto"; };
   }, [chatState]);
 
-  // Cleanup recognition on unmount
+  // Cleanup
   useEffect(() => {
     return () => {
-      // stop recognition if still active
-      try {
-        recognitionRef.current?.stop();
-      } catch (e) {}
+      try { recognitionRef.current?.stop(); } catch (e) {}
       clearInterval(timerIntervalRef.current);
     };
   }, []);
 
-  // Handle copying AI messages
+  // Copy Logic
   const handleCopy = async (text) => {
     try {
-      // Using execCommand as a fallback for potential iframe restrictions
       const textArea = document.createElement("textarea");
       textArea.value = text;
-      textArea.style.position = "fixed";  // Make it invisible
+      textArea.style.position = "fixed";
       textArea.style.top = "-9999px";
-      textArea.style.left = "-9999px";
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
       document.execCommand("copy");
       document.body.removeChild(textArea);
-
       setCopiedText(text);
       setTimeout(() => setCopiedText(""), 2000);
     } catch (err) {
-      console.error("Failed to copy text:", err);
+      console.error("Failed to copy", err);
     }
   };
-  
-  // Handle suggested prompt click
+
   const handlePromptClick = (prompt) => {
     setInputMessage(prompt);
     textareaRef.current?.focus();
   };
-  
-  // Handle stopping the generation
+
   const handleStopGenerating = () => {
     abortControllerRef.current?.abort();
     setLoading(false);
   };
-  
-  // Handle clearing the chat
+
   const handleClearChat = () => {
-    setMessages([
-      { 
-        sender: "ai", 
-        text: "Chat cleared! How can I help you start fresh?", 
-        timestamp: new Date() 
-      },
-    ]);
+    setMessages([{ sender: "ai", text: "Chat cleared! How can I help you start fresh?", timestamp: new Date() }]);
+    setSelectedImage(null);
   };
 
-  // --- Voice Logic (Frontend Only) ---
+  // --- IMAGE HELPERS ---
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setSelectedImage(reader.result);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const removeImage = () => {
+    setSelectedImage(null);
+  };
+
+  // --- VOICE LOGIC ---
+  const [isListening, setIsListening] = useState(false);
+  const [timer, setTimer] = useState(0);
+  const recognitionRef = useRef(null);
+  const timerIntervalRef = useRef(null);
+
   const startListening = () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      alert("Your browser does not support Speech Recognition. Try Chrome.");
+      alert("Browser does not support Speech Recognition.");
       return;
     }
-
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     recognitionRef.current = new SpeechRecognition();
-
     recognitionRef.current.continuous = true;
     recognitionRef.current.interimResults = true;
 
     recognitionRef.current.onstart = () => {
       setIsListening(true);
       setTimer(0);
-      timerIntervalRef.current = setInterval(() => {
-        setTimer((prev) => prev + 1);
-      }, 1000);
+      timerIntervalRef.current = setInterval(() => setTimer(p => p + 1), 1000);
     };
 
     recognitionRef.current.onresult = (event) => {
-      let finalTranscript = '';
-      // Build transcript from results (includes interim)
+      let final = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        finalTranscript += event.results[i][0].transcript;
+        final += event.results[i][0].transcript;
       }
-      setInputMessage(finalTranscript);
+      setInputMessage(final);
     };
 
-    recognitionRef.current.onerror = (event) => {
-      console.error("Speech recognition error", event.error);
-      if (event.error === 'network') {
-        alert("Network Error: Please check your internet connection.");
-      } else if (event.error === 'not-allowed') {
-        alert("Microphone blocked.");
-      } else if (event.error === 'no-speech') {
-        // ignore; don't spam user
-      }
-      stopListening();
-    };
-
-    recognitionRef.current.onend = () => {
-      // ensure stopped state
-      stopListening();
-    };
-
-    try {
-      recognitionRef.current.start();
-    } catch (e) {
-      console.error("Could not start recognition:", e);
-    }
+    recognitionRef.current.onerror = () => stopListening();
+    recognitionRef.current.onend = () => stopListening();
+    recognitionRef.current.start();
   };
 
   const stopListening = () => {
-    try {
-      if (recognitionRef.current) {
-        recognitionRef.current.onresult = null;
-        recognitionRef.current.onend = null;
-        recognitionRef.current.onerror = null;
-        recognitionRef.current.stop();
-        recognitionRef.current = null;
-      }
-    } catch (e) {
-      // ignore if already stopped
-    }
+    if (recognitionRef.current) recognitionRef.current.stop();
     setIsListening(false);
     clearInterval(timerIntervalRef.current);
-    timerIntervalRef.current = null;
   };
 
-  // Format time for UI (mm:ss)
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  const formatTime = (sec) => {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  // --- USER'S handleSend function (Only added AbortController and timestamps) ---
+  // --- SEND LOGIC ---
   const handleSend = async () => {
-    if (!inputMessage.trim()) return;
+    // Only allow sending if text exists OR (image exists AND state is expanded)
+    const hasText = inputMessage.trim().length > 0;
+    const hasImage = !!selectedImage;
+    const canSendImage = chatState === 'expanded';
 
-    const newMessages = [...messages, { sender: "user", text: inputMessage, timestamp: new Date() }];
+    if (!hasText && (!hasImage || !canSendImage)) return;
+
+    // Construct new message
+    const newMessage = {
+      sender: "user",
+      text: inputMessage,
+      timestamp: new Date(),
+      // Attach image only if we are in expanded mode
+      image: canSendImage ? selectedImage : null 
+    };
+
+    const newMessages = [...messages, newMessage];
     setMessages(newMessages);
     setInputMessage("");
+    
+    // Store image for request, then clear state
+    const imageToSend = canSendImage ? selectedImage : null;
+    setSelectedImage(null);
     setLoading(true);
 
     abortControllerRef.current = new AbortController();
@@ -386,24 +380,21 @@ const PatientAIChat = () => {
       const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/ai/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: inputMessage }),
+        body: JSON.stringify({ 
+          message: newMessage.text,
+          image: imageToSend // Send base64 to backend
+        }),
         signal: signal
       });
 
       const data = await res.json();
-      const formattedReply = data.success
-        ? data.reply.replace(/\\n/g, "\n")
-        : `AI Error: ${data.reply}`;
-      
-      setMessages([...newMessages, { sender: "ai", text: formattedReply, timestamp: new Date() }]);
+      const replyText = data.success ? data.reply.replace(/\\n/g, "\n") : `AI Error: ${data.reply}`;
+      setMessages([...newMessages, { sender: "ai", text: replyText, timestamp: new Date() }]);
 
     } catch (err) {
-      if (err.name === 'AbortError') {
-        console.log("Fetch aborted by user.");
-        setMessages(prev => [...prev, { sender: "ai", text: "I've stopped generating.", timestamp: new Date() }]);
-      } else {
-        console.error("AI Error:", err);
-        setMessages([...newMessages, { sender: "ai", text: "AI Error: Could not connect to the service.", timestamp: new Date() }]);
+      if (err.name !== 'AbortError') {
+        console.error(err);
+        setMessages([...newMessages, { sender: "ai", text: "Error connecting to AI service.", timestamp: new Date() }]);
       }
     }
     setLoading(false);
@@ -419,92 +410,42 @@ const PatientAIChat = () => {
 
   return (
     <>
-      {/* Floating Chat Button with NEW Animation */}
+      {/* 1. FLOATING BUTTON (Closed) */}
       {chatState === 'closed' && (
         <div className="fixed bottom-6 right-6 z-50">
           <AnimatedChatButton onClick={() => setChatState('mini')} />
         </div>
       )}
 
-      {/* Mini Chat Window */}
+      {/* 2. MINI CHAT (20% View - NO PHOTO OPTIONS) */}
       {chatState === 'mini' && (
         <div className="fixed bottom-6 right-6 w-[420px] h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden z-50 animate-slide-in border border-gray-200">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white px-5 py-4 flex justify-between items-center relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer"></div>
-            <div className="flex items-center gap-2 relative z-10">
-              <div className="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
-                <SparklesIcon />
-              </div>
-              <div>
-                <span className="font-semibold text-lg block">AI Health Assistant</span>
-                <span className="text-xs text-blue-100 flex items-center gap-1">
-                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                  Online
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center gap-1 relative z-10">
-              <button 
-                onClick={handleClearChat}
-                className="hover:bg-white/20 p-2 rounded-lg transition-all duration-200 hover:scale-110"
-                aria-label="Clear Chat"
-              >
-                <BroomIcon />
-              </button>
-              <button 
-                onClick={() => setChatState('expanded')} 
-                className="hover:bg-white/20 p-2 rounded-lg transition-all duration-200 hover:scale-110"
-                aria-label="Expand Chat"
-              >
-                <ExpandIcon />
-              </button>
-              <button 
-                onClick={() => setChatState('closed')} 
-                className="hover:bg-white/20 p-2 rounded-lg transition-all duration-200 hover:scale-110"
-                aria-label="Close Chat"
-              >
-                <CloseIcon />
-              </button>
-            </div>
+          <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white px-5 py-4 flex justify-between items-center">
+             <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm"><SparklesIcon /></div>
+                <div><span className="font-semibold block">AI Assistant</span></div>
+             </div>
+             <div className="flex gap-1">
+               <button onClick={handleClearChat} className="hover:bg-white/20 p-2 rounded-lg"><BroomIcon /></button>
+               <button onClick={() => setChatState('expanded')} className="hover:bg-white/20 p-2 rounded-lg"><ExpandIcon /></button>
+               <button onClick={() => setChatState('closed')} className="hover:bg-white/20 p-2 rounded-lg"><CloseIcon /></button>
+             </div>
           </div>
 
-          {/* Messages Container */}
-          <div className="flex-1 p-4 overflow-y-auto bg-gradient-to-b from-gray-50 to-white custom-scrollbar">
+          {/* Messages (Images HIDDEN in mini mode) */}
+          <div className="flex-1 p-4 overflow-y-auto bg-gray-50 custom-scrollbar">
             <div className="space-y-4">
-              {messages.map((msg, index) => (
-                <ChatMessage 
-                  key={index} 
-                  msg={msg} 
-                  onCopy={handleCopy}
-                  isCopied={copiedText === msg.text}
-                />
+              {messages.map((msg, idx) => (
+                <ChatMessage key={idx} msg={msg} onCopy={handleCopy} isCopied={copiedText === msg.text} isExpanded={false} />
               ))}
-              
-              {loading && (
-                <div className="flex justify-start animate-fade-in-up">
-                  <div className="flex gap-2">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
-                      <BotIcon />
-                    </div>
-                    <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-sm shadow-sm px-4 py-3">
-                      <div className="flex items-center gap-1">
-                        <span className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                        <span className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                        <span className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {loading && <div className="text-gray-500 text-sm ml-2">AI is typing...</div>}
               <div ref={bottomRef}></div>
             </div>
-            {messages.length === 1 && !loading && (
-              <SuggestedPrompts onPromptClick={handlePromptClick} />
-            )}
+            {messages.length === 1 && !loading && <SuggestedPrompts onPromptClick={handlePromptClick} />}
           </div>
 
-          {/* Input Area */}
+          {/* Input (NO Gallery Icon) */}
           <div className="p-4 bg-white border-t border-gray-200">
             <div className="flex items-end gap-2">
               <textarea
@@ -514,334 +455,284 @@ const PatientAIChat = () => {
                 onKeyDown={handleKeyDown}
                 placeholder="Type your message..."
                 rows={1}
-                className="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none max-h-32 text-sm transition-all duration-200"
+                className="flex-1 border border-gray-300 rounded-xl px-4 py-2 outline-none resize-none max-h-32 text-sm"
               />
-              {loading ? (
-                <button
-                  onClick={handleStopGenerating}
-                  className="bg-gradient-to-br from-red-500 to-red-600 text-white p-3 rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 flex-shrink-0 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
-                  aria-label="Stop Generating"
-                >
-                  <StopIcon />
-                </button>
-              ) : (
-                <button
-                  onClick={handleSend}
-                  disabled={!inputMessage.trim()}
-                  className="bg-gradient-to-br from-blue-600 to-blue-700 text-white p-3 rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 flex-shrink-0 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
-                  aria-label="Send Message"
-                >
-                  <SendIcon />
-                </button>
-              )}
+              <button onClick={handleSend} className="bg-blue-600 text-white p-3 rounded-xl">
+                 <SendIcon />
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Expanded Chat Window */}
+      {/* 3. EXPANDED CHAT (80-90% View - WITH PHOTO OPTIONS) */}
       {chatState === 'expanded' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm animate-fade-in">
           <div className="w-full h-full max-w-[90vw] max-h-[90vh] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-scale-in border border-gray-300">
+            
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white px-6 py-5 flex justify-between items-center relative overflow-hidden flex-shrink-0">
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer"></div>
-              <div className="flex items-center gap-3 relative z-10">
-                <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
-                  <SparklesIcon />
-                </div>
-                <div>
-                  <h2 className="font-bold text-xl">AI Health Assistant</h2>
-                  <p className="text-blue-100 text-sm flex items-center gap-2">
-                    <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                    Ask me anything about your health
-                  </p>
-                </div>
+            <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white px-6 py-5 flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                 <div className="p-2 bg-white/20 rounded-xl"><SparklesIcon /></div>
+                 <div><h2 className="font-bold text-xl">AI Health Assistant</h2></div>
               </div>
-              <div className="flex items-center gap-2 relative z-10">
-                <button 
-                  onClick={handleClearChat}
-                  className="hover:bg-white/20 p-2.5 rounded-lg transition-all duration-200 hover:scale-110"
-                  aria-label="Clear Chat"
-                >
-                  <BroomIcon />
-                </button>
-                <button 
-                  onClick={() => setChatState('mini')} 
-                  className="hover:bg-white/20 p-2.5 rounded-lg transition-all duration-200 hover:scale-110"
-                  aria-label="Minimize Chat"
-                >
-                  <MinimizeIcon />
-                </button>
-                <button 
-                  onClick={() => setChatState('closed')} 
-                  className="hover:bg-white/20 p-2.5 rounded-lg transition-all duration-200 hover:scale-110"
-                  aria-label="Close Chat"
-                >
-                  <CloseIcon />
-                </button>
+              <div className="flex gap-2">
+                <button onClick={handleClearChat} className="hover:bg-white/20 p-2.5 rounded-lg"><BroomIcon /></button>
+                <button onClick={() => setChatState('mini')} className="hover:bg-white/20 p-2.5 rounded-lg"><MinimizeIcon /></button>
+                <button onClick={() => setChatState('closed')} className="hover:bg-white/20 p-2.5 rounded-lg"><CloseIcon /></button>
               </div>
             </div>
 
-            {/* Messages Container */}
-            <div className="flex-1 p-6 overflow-y-auto bg-gradient-to-b from-gray-50 to-white custom-scrollbar">
+            {/* Messages (Images VISIBLE) */}
+            <div className="flex-1 p-6 overflow-y-auto bg-gray-50 custom-scrollbar">
               <div className="max-w-4xl mx-auto space-y-6">
-                {messages.map((msg, index) => (
-                  <ChatMessage 
-                    key={index} 
-                    msg={msg} 
-                    onCopy={handleCopy}
-                    isCopied={copiedText === msg.text}
-                  />
+                {messages.map((msg, idx) => (
+                  <ChatMessage key={idx} msg={msg} onCopy={handleCopy} isCopied={copiedText === msg.text} isExpanded={true} />
                 ))}
-                
-                {loading && (
-                  <div className="flex justify-start animate-fade-in-up">
-                    <div className="flex gap-3">
-                      <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg">
-                        <BotIcon />
-                      </div>
-                      <div className="bg-white border border-gray-200 rounded-3xl rounded-tl-md shadow-md px-6 py-4">
-                        <div className="flex items-center gap-1.5">
-                          <span className="w-2.5 h-2.5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                          <span className="w-2.5 h-2.5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                          <span className="w-2.5 h-2.5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                {loading && <div className="text-gray-500 ml-4 animate-pulse">Analyzing...</div>}
                 <div ref={bottomRef}></div>
               </div>
-              {messages.length === 1 && !loading && (
-                <div className="max-w-4xl mx-auto">
-                  <SuggestedPrompts onPromptClick={handlePromptClick} />
-                </div>
-              )}
+              {messages.length === 1 && !loading && <div className="max-w-4xl mx-auto"><SuggestedPrompts onPromptClick={handlePromptClick} /></div>}
             </div>
 
-            {/* Input Area */}
+            {/* Input Area (WITH Gallery & Preview) */}
             <div className="p-6 bg-white border-t border-gray-200 flex-shrink-0">
-              <div className="max-w-4xl mx-auto">
-                <div className="flex items-end gap-3">
-                  <textarea
-                    ref={textareaRef}
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Type your message here..."
-                    rows={1}
-                    className="flex-1 border border-gray-300 rounded-2xl px-5 py-3.5 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none max-h-40 text-base transition-all duration-200"
-                  />
-
-                  {/* --- MIC button: VISIBLE ONLY IN EXPANDED MODE --- */}
-                  <button
-                    onClick={startListening}
-                    className="flex items-center justify-center p-3 rounded-2xl hover:scale-105 transition-shadow duration-200 shadow-md"
-                    aria-label="Start voice input"
-                    title="Voice input"
-                  >
-                    <img src={assets.mic_icon} alt="mic" className="w-6 h-6" />
-                  </button>
-
-                  {loading ? (
-                    <button
-                      onClick={handleStopGenerating}
-                      className="bg-gradient-to-br from-red-500 to-red-600 text-white px-6 py-3.5 rounded-2xl hover:from-red-600 hover:to-red-700 transition-all duration-200 flex-shrink-0 shadow-lg hover:shadow-xl font-medium hover:scale-105 active:scale-95"
-                      aria-label="Stop Generating"
-                    >
-                      <StopIcon />
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleSend}
-                      disabled={!inputMessage.trim()}
-                      className="bg-gradient-to-br from-blue-600 to-blue-700 text-white px-6 py-3.5 rounded-2xl hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 flex-shrink-0 shadow-lg hover:shadow-xl font-medium hover:scale-105 active:scale-95"
-                      aria-label="Send Message"
-                    >
-                      <SendIcon />
-                    </button>
+               {/* Use the CSS structure you requested */}
+               <div className="max-w-4xl mx-auto search-box">
+                  
+                  {/* Image Preview Container (Only if image selected) */}
+                  {selectedImage && (
+                    <div className="image-preview-container">
+                      <img src={selectedImage} alt="preview" className="pending-image-thumb" />
+                      <button onClick={removeImage} className="pending-image-remove">
+                        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                      </button>
+                    </div>
                   )}
-                </div>
-              </div>
+
+                  <div className="input-row">
+                    <textarea 
+                       ref={textareaRef}
+                       value={inputMessage} 
+                       onChange={(e) => setInputMessage(e.target.value)}
+                       onKeyDown={handleKeyDown}
+                       placeholder="Ask about symptoms or upload a medical image..."
+                       rows={1}
+                       className="resize-none max-h-40" // Styling handled by search-box input css mostly
+                    />
+                    
+                    <div className="search-actions">
+                       {/* Hidden Input */}
+                       <input 
+                          type="file" 
+                          accept="image/*" 
+                          ref={fileInputRef} 
+                          onChange={handleImageUpload} 
+                          className="hidden" 
+                       />
+                       
+                       {/* Gallery Button */}
+                       <div onClick={() => fileInputRef.current.click()} title="Upload Image">
+                          <GalleryIcon />
+                       </div>
+
+                       {/* Mic Button */}
+                       <div onClick={startListening} title="Voice Input" className="cursor-pointer text-gray-500 hover:text-blue-600 hover:scale-110 transition-all">
+                          <MicIcon />
+                       </div>
+
+                       {/* Send Button */}
+                       {loading ? (
+                         <div onClick={handleStopGenerating} className="cursor-pointer text-red-500"><StopIcon /></div>
+                       ) : (
+                         <div onClick={handleSend} className={`cursor-pointer ${(!inputMessage && !selectedImage) ? 'opacity-50' : 'text-blue-600'}`}><SendIcon /></div>
+                       )}
+                    </div>
+                  </div>
+               </div>
             </div>
+
           </div>
         </div>
       )}
 
       {/* Listening Overlay */}
       {isListening && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex flex-col items-center justify-center text-white cursor-pointer"
-          onClick={stopListening}
-        >
-          <div className="text-center">
-            <h2 className="text-2xl font-bold mb-2">Listening…</h2>
-            <p className="text-lg opacity-80">{formatTime(timer)}</p>
-
-            <div className="mt-6 flex gap-2 justify-center">
-              <span className="w-3 h-3 bg-blue-400 rounded-full animate-bounce"></span>
-              <span className="w-3 h-3 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></span>
-              <span className="w-3 h-3 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></span>
-            </div>
-
-            <p className="mt-6 text-sm opacity-60">Tap anywhere to stop</p>
-          </div>
+        <div className="voice-overlay" onClick={stopListening}>
+           <div className="voice-content">
+             <h2>Listening...</h2>
+             <p>{formatTime(timer)}</p>
+             <div className="voice-wave">
+               <span></span><span></span><span></span><span></span><span></span>
+             </div>
+             <p className="tap-to-stop">Tap to Stop</p>
+           </div>
         </div>
       )}
 
-      {/* Custom Styles */}
+      {/* --- INJECTING YOUR SPECIFIC CSS --- */}
       <style>{`
-        /* NEW: Chat Button Slide Animation */
-        @keyframes slide-in-out-text {
-          0% {
-            width: 0;
-            opacity: 0;
-          }
-          30% {
-            width: 150px; /* Width of "ask Vaidyam AI" + padding */
-            opacity: 1;
-          }
-          70% {
-            width: 150px; /* Hold the expanded state */
-            opacity: 1;
-          }
-          100% {
-            width: 0;
-            opacity: 0;
-          }
-        }
-        .animate-slide-in-out-text {
-          /* Total duration 6s: 1.5s expand, 1.5s hold, 3s collapse/wait */
-          animation: slide-in-out-text 6s ease-in-out infinite;
+        /* --- COPY PASTE FROM YOUR GEMINI CLONE CSS --- */
+        
+        /* 1. The Container */
+        .search-box {
+           display: flex;
+           flex-direction: column;
+           align-items: flex-start;
+           justify-content: center;
+           width: 100%;
+           max-width: 900px;
+           padding: 12px 20px;
+           margin: 0 auto;
+           background-color: #f0f4f9;
+           border-radius: 30px;
+           transition: all 0.3s ease;
+           position: relative; /* Context for preview */
         }
 
-        /* Shimmer Animation for Header */
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        .animate-shimmer {
-          animation: shimmer 3s infinite;
-        }
-
-        /* Ping Slow Animation */
-        @keyframes ping-slow {
-          0% { transform: scale(1); opacity: 0.8; }
-          50% { transform: scale(1.3); opacity: 0; }
-          100% { transform: scale(1.3); opacity: 0; }
-        }
-        .animate-ping-slow {
-          animation: ping-slow 2s cubic-bezier(0,0,0.2,1) infinite;
+        /* 2. Input Row */
+        .input-row {
+           width: 100%;
+           display: flex;
+           align-items: center;
+           justify-content: space-between;
+           gap: 10px;
         }
 
-        /* Slide In Animation */
-        @keyframes slide-in {
-          from { 
-            transform: translateY(20px) scale(0.95); 
-            opacity: 0; 
-          }
-          to { 
-            transform: translateY(0) scale(1); 
-            opacity: 1; 
-          }
-        }
-        .animate-slide-in {
-          animation: slide-in 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        .search-box textarea {
+           flex: 1;
+           background: transparent;
+           border: none;
+           outline: none;
+           padding: 4px 8px;
+           font-size: 18px;
         }
 
-        /* Scale In Animation */
-        @keyframes scale-in {
-          from { 
-            transform: scale(0.9); 
-            opacity: 0; 
-          }
-          to { 
-            transform: scale(1); 
-            opacity: 1; 
-          }
+        .search-actions {
+           display: flex;
+           align-items: center;
+           gap: 15px;
         }
-        .animate-scale-in {
-          animation: scale-in 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        
+        .search-actions svg, .search-actions img {
+           cursor: pointer;
+           transition: transform 0.2s;
         }
-
-        /* Fade In Animation */
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.3s ease-out;
+        
+        .search-actions svg:hover, .search-actions img:hover {
+           transform: scale(1.1);
         }
 
-        /* Fade In Up Animation */
-        @keyframes fade-in-up {
-          from { 
-            opacity: 0; 
-            transform: translateY(10px); 
-          }
-          to { 
-            opacity: 1; 
-            transform: translateY(0); 
-          }
-        }
-        .animate-fade-in-up {
-          animation: fade-in-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        /* 3. Image Preview Styles */
+        .image-preview-container {
+           position: relative;
+           display: inline-block;
+           margin-bottom: 12px;
+           margin-left: 5px;
+           animation: fadeIn 0.3s ease;
         }
 
-        /* Message Bubble Hover Effect */
-        .message-bubble {
-          transition: transform 0.2s ease;
-        }
-        .message-bubble:hover {
-          transform: translateY(-2px);
-        }
-
-        /* Custom Scrollbar */
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #f1f5f9;
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(180deg, #3b82f6, #6366f1);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(180deg, #2563eb, #4f46e5);
+        .pending-image-thumb {
+           width: 60px;
+           height: 60px;
+           object-fit: cover;
+           border-radius: 12px;
+           border: 1px solid #e0e0e0;
+           display: block;
         }
 
-        /* Prose Styles for Markdown */
-        .prose p {
-          margin-top: 0;
-          margin-bottom: 0.5em;
+        .pending-image-remove {
+           position: absolute;
+           top: -6px;
+           right: -6px;
+           background: #3c4043;
+           color: white;
+           border: none;
+           border-radius: 50%;
+           width: 22px;
+           height: 22px;
+           cursor: pointer;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           padding: 0;
+           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+           transition: background 0.2s, transform 0.1s;
+           z-index: 2;
         }
-        .prose p:last-child {
-           margin-bottom: 0;
+        
+        .pending-image-remove:hover {
+           background: #5f6368;
+           transform: scale(1.05);
         }
-        .prose ul, .prose ol {
-          margin: 0.5em 0;
-          padding-left: 1.5em;
-        }
-        .prose li > p { display: inline; }
-        .prose li { margin-top: 0.25em; margin-bottom: 0.25em; }
-        .prose code {
-          background: rgba(0,0,0,0.1);
-          padding: 0.2em 0.4em;
-          border-radius: 0.25em;
-          font-size: 0.9em;
-        }
-        .prose-invert code {
-          background: rgba(255,255,255,0.2);
+        
+        .pending-image-remove svg {
+           width: 14px;
+           height: 14px;
+           fill: currentColor;
         }
 
-        /* Smooth Transitions */
-        * {
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
+        /* 4. Chat History Image */
+        .chat-image-thumb {
+           width: 200px !important;
+           height: auto;
+           border-radius: 20px !important;
+           object-fit: contain;
+           margin-bottom: 10px;
+           border: 2px solid #e5e5e5;
+           animation: fadeIn 0.2s ease;
         }
+
+        /* 5. Animations */
+        @keyframes fadeIn {
+           from { opacity: 0; transform: translateY(5px); }
+           to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 6. Voice Overlay from your CSS */
+        .voice-overlay {
+           position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+           background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(3px);
+           z-index: 9999; display: flex; justify-content: center; align-items: center;
+           flex-direction: column; animation: fadeIn 0.4s ease-out; cursor: pointer;
+        }
+        .voice-content h2 { color: #fff; font-size: 28px; margin:0; }
+        .voice-content p { color: #eee; font-size: 18px; margin-top:5px; font-family: monospace; }
+        .voice-wave { display: flex; gap: 6px; height: 30px; align-items: center; margin-top: 20px; }
+        .voice-wave span { width: 4px; background: #fff; border-radius: 10px; animation: soundWave 1s infinite ease-in-out; }
+        .voice-wave span:nth-child(1) { height: 10px; animation-delay: 0.1s; }
+        .voice-wave span:nth-child(2) { height: 25px; animation-delay: 0.2s; }
+        .voice-wave span:nth-child(3) { height: 15px; animation-delay: 0.3s; }
+        .voice-wave span:nth-child(4) { height: 25px; animation-delay: 0.4s; }
+        .voice-wave span:nth-child(5) { height: 10px; animation-delay: 0.5s; }
+        @keyframes soundWave { 0%, 100% { height: 10px; opacity: 0.5; } 50% { height: 30px; opacity: 1; } }
+        .tap-to-stop { position: absolute; bottom: 50px; color: #ddd; font-size: 20px; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Animation utilities */
+        .animate-slide-in-out-text { animation: slide-in-out-text 6s ease-in-out infinite; }
+        .animate-shimmer { animation: shimmer 3s infinite; }
+        .animate-ping-slow { animation: ping-slow 2s cubic-bezier(0,0,0.2,1) infinite; }
+        .animate-slide-in { animation: slide-in 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .animate-scale-in { animation: scale-in 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .animate-fade-in { animation: fade-in 0.3s ease-out; }
+        .animate-fade-in-up { animation: fade-in-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        
+        /* Keyframes */
+        @keyframes slide-in-out-text { 0% { width:0; opacity:0; } 30% { width:150px; opacity:1; } 70% { width:150px; opacity:1; } 100% { width:0; opacity:0; } }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        @keyframes ping-slow { 0% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.3); opacity: 0; } 100% { transform: scale(1.3); opacity: 0; } }
+        @keyframes slide-in { from { transform: translateY(20px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+        @keyframes scale-in { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes fade-in-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #3b82f6, #6366f1); border-radius: 10px; }
+        
+        /* Markdown Prose */
+        .prose p { margin-top: 0; margin-bottom: 0.5em; }
+        .prose p:last-child { margin-bottom: 0; }
       `}</style>
     </>
   );

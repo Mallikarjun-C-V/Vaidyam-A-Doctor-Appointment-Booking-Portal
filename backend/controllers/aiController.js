@@ -4,13 +4,14 @@ import doctorModel from "../models/doctorModel.js";
 
 export const chatWithAI = async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, image } = req.body;
 
-    if (!message || message.trim().length === 0) {
-      return res.json({ success: false, reply: "Please describe your issue clearly." });
+    // Validate that there is at least a message OR an image
+    if ((!message || message.trim().length === 0) && !image) {
+      return res.json({ success: false, reply: "Please describe your issue or upload an image." });
     }
 
-    // Load available doctors
+    // Load available doctors for context
     const doctors = await doctorModel.find({ available: true }).select([
       "name",
       "speciality",
@@ -24,22 +25,48 @@ export const chatWithAI = async (req, res) => {
       )
       .join("\n");
 
-    // Load the prompt file
-    const basePrompt = fs.readFileSync(process.env.PROMPT_PATH, "utf8");
+    // Load the system prompt
+    // Ensure you have a valid path in your .env or constant
+    const basePrompt = fs.readFileSync(process.env.PROMPT_PATH || "./prompts/doctorPrompt.txt", "utf8");
 
-    // Insert dynamic values
-    const prompt = basePrompt
+    // Prepare the text prompt. If message is empty (image only), provide a default context.
+    const finalSystemPrompt = basePrompt
       .replace("${doctorsList}", doctorsList)
-      .replace("${message}", message);
+      .replace("${message}", message || "Analyze the attached medical image and provide insights.");
 
-    // Gemini model
+    // Initialize Gemini
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash-preview-09-2025",
+      model: "gemini-2.5-flash-preview-09-2025", 
     });
 
-    const result = await model.generateContent(prompt);
+    // Construct the payload parts
+    let promptParts = [
+      { text: finalSystemPrompt }
+    ];
+
+    // If an image exists, format it for Gemini
+    if (image) {
+      // The frontend sends a Data URI: "data:image/jpeg;base64,/9j/4AAQ..."
+      // We need to split it to get the raw base64 and the mimeType.
+      try {
+        const [mimeMetadata, base64Data] = image.split(",");
+        // Extract mime type (e.g., "image/jpeg") from "data:image/jpeg;base64"
+        const mimeType = mimeMetadata.match(/:(.*?);/)[1]; 
+
+        promptParts.push({
+          inlineData: {
+            data: base64Data,
+            mimeType: mimeType
+          }
+        });
+      } catch (e) {
+        console.error("Image parsing error", e);
+      }
+    }
+
+    // Generate response
+    const result = await model.generateContent(promptParts);
     const reply = result.response.text();
 
     res.json({ success: true, reply });

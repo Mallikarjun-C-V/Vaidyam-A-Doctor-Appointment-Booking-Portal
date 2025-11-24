@@ -124,8 +124,10 @@ io.on('connection', (socket) => {
 })
 
 // middlewares
-app.use(express.json())
-app.use(cors())
+// --- FIX: Increased limit to 50mb to handle images ---
+app.use(express.json({ limit: '20mb' })) 
+app.use(express.urlencoded({ limit: '20mb', extended: true }))
+app.use(cors()) // Standard CORS for REST API
 
 //api endpoints
 app.use('/api/admin', adminRouter)
