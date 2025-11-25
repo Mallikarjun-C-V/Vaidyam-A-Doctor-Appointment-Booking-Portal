@@ -37,11 +37,13 @@ import Gynecologist from './Gynecologist.svg'
 import Neurologist from './Neurologist.svg'
 import Pediatricians from './Pediatricians.svg'
 import mic_icon from './mic_icon.png'
+import gallery_icon from './gallery_icon.png'
 
 
 export const assets = {
     appointment_img,
     header_img,
+    gallery_icon,
     group_profiles,
     logo,
     chats_icon,

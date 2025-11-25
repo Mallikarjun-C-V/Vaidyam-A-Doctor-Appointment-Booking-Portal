@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import Home from './pages/Home'
 import Doctors from './pages/Doctors'
@@ -15,15 +15,27 @@ import { ToastContainer } from 'react-toastify';
 import Notfound from './pages/Notfound'
 import Jobs from './pages/Jobs'
 import ChatWithDoctor from './pages/ChatWithDoctor';
-import PatientAIChat from './components/PatientAIChat'; // Import AI chat component
+import PatientAIChat from './components/PatientAIChat'; 
 
 const App = () => {
   const location = useLocation();
 
-  // Pages where AI chat should appear
+  useEffect(() => {
+    const handleDragStart = (e) => {
+      const tag = e.target.tagName && e.target.tagName.toLowerCase();
+      if (tag === 'img' || tag === 'svg') {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('dragstart', handleDragStart);
+    return () => {
+      document.removeEventListener('dragstart', handleDragStart);
+    };
+  }, []);
+
   const aiPages = ['/', '/doctors', '/about', '/contact'];
 
-  // Check if current route is one of the AI pages
   const showAIChat = aiPages.includes(location.pathname) || location.pathname.startsWith('/doctors/');
 
   return (

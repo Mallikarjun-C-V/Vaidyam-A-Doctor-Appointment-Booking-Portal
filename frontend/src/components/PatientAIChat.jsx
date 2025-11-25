@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
+import { assets } from '../assets/assets'
 
 // --- ICONS ---
 const CloseIcon = () => (
@@ -68,12 +69,6 @@ const BotIcon = () => (
 const UserIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-  </svg>
-);
-
-const GalleryIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
   </svg>
 );
 
@@ -467,7 +462,7 @@ const PatientAIChat = () => {
 
       {/* 3. EXPANDED CHAT (80-90% View - WITH PHOTO OPTIONS) */}
       {chatState === 'expanded' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 animate-fade-in">
           <div className="w-full h-full max-w-[90vw] max-h-[90vh] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-scale-in border border-gray-300">
             
             {/* Header */}
@@ -533,7 +528,7 @@ const PatientAIChat = () => {
                        
                        {/* Gallery Button */}
                        <div onClick={() => fileInputRef.current.click()} title="Upload Image">
-                          <GalleryIcon />
+                                <img className='w-5' src={assets.gallery_icon} alt="" />
                        </div>
 
                        {/* Mic Button */}
