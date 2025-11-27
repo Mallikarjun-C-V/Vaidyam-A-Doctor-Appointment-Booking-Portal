@@ -92,10 +92,10 @@ const Navbar = () => {
                                 <img className='w-2.5 group-hover:rotate-180 transition-transform duration-300' src={assets.dropdown_icon} alt="" />
                                 <div className='absolute top-full right-0 mt-3 text-base font-medium text-gray-600 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2'>
                                     <div className='min-w-56 bg-white rounded-lg shadow-xl border border-gray-100 flex flex-col p-2'>
-                                        <p onClick={() => {navigate('my-profile'); scrollTo(0,0)}} className='hover:bg-gray-50 hover:text-primary1 px-4 py-3 rounded-md cursor-pointer transition-all duration-200 flex items-center gap-3'>
+                                        <p onClick={() => {navigate('my-profile'); scrollTo(0,0)}} className='hover:bg-gray-200 hover:text-primary1 px-4 py-3 rounded-md cursor-pointer transition-all duration-200 flex items-center gap-3'>
                                             <span className='text-lg'>👤</span> My Profile
                                         </p>
-                                        <p onClick={() => {navigate('my-appointments'); scrollTo(0,0)}} className='hover:bg-gray-50 hover:text-primary1 px-4 py-3 rounded-md cursor-pointer transition-all duration-200 flex items-center gap-3'>
+                                        <p onClick={() => {navigate('my-appointments'); scrollTo(0,0)}} className='hover:bg-gray-200 hover:text-primary1 px-4 py-3 rounded-md cursor-pointer transition-all duration-200 flex items-center gap-3'>
                                             <span className='text-lg'>📅</span> My Appointments
                                         </p>
                                         <p onClick={() => logout()} className='hover:bg-red-50 hover:text-red-600 px-4 py-3 rounded-md cursor-pointer transition-all duration-200 flex items-center gap-3'>
