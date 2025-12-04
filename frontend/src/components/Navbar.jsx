@@ -27,7 +27,7 @@ const Navbar = () => {
             <motion.img
                 onClick={() => { navigate('/'); scrollTo(0, 0) }}
                 className='w-44 cursor-pointer hover:scale-105 transition-transform duration-300'
-                src={assets.logo}
+                src={assets.logo1}
                 alt=""
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -148,7 +148,7 @@ const Navbar = () => {
                         transition={{ duration: 0.5 }}
                     >
                         <div className='flex items-center justify-between px-6 py-6 border-b border-gray-100'>
-                            <img className='w-32' src={assets.logo} alt="" />
+                            <img className='w-32' src={assets.logo1} alt="" />
                             <button
                                 className='w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors duration-200'
                                 onClick={() => setShowMenu(false)}
