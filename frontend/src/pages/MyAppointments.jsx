@@ -146,7 +146,7 @@ const MyAppointments = () => {
       if (data.success) {
         const callbackUrl = window.location.href;
         window.location.href =
-          `http://localhost:5176/pay?orderId=${data.orderId}&callback_url=${callbackUrl}`;
+          `https://sugampay-backend.onrender.com/pay?orderId=${data.orderId}&callback_url=${callbackUrl}`;
       } else {
         toast.error(data.message);
       }
